@@ -126,3 +126,18 @@ export const apps = {
   ],
   allow: true,
 };
+
+export const verifyUserPayload = {
+  username: "testUser", 
+  device: {
+    id: "device12345",  
+    os: "android",       
+    appVersion: "1.0.0", 
+    metadata: {
+      model: "Pixel 5",
+      osVersion: "12.0", 
+      deviceName: "Test Device",
+      batteryLevel: 85, 
+    },
+  },
+};

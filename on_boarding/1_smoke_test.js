@@ -9,15 +9,16 @@ import {
   gps,
   meta,
   apps,
+  verifyUserPayload,
 } from "./utils/utils.js";
 
 // Test configuration
 export const options = {
-  vus: 1000, // Increased to 10 virtual users
-  duration: "1m", // Test runs for 1 minute
+  vus: 2,
+  duration: "1m",
   ext: {
     loadimpact: {
-      name: "smoke test", // Name for identifying the test
+      name: "smoke test",
     },
   },
 };
@@ -33,7 +34,7 @@ export default function () {
       },
     }
   );
-  // Assertions for the valid response
+
   check(validRes, {
     "Valid Email: OTP request successful (200)": (r) => r.status === 200,
     "Valid Email: Response contains success message": (r) =>
@@ -51,7 +52,6 @@ export default function () {
     }
   );
 
-  // Assertions for the OTP verification response
   check(verifyRes, {
     "Verify OTP: OTP verification successful (200)": (r) => r.status === 200,
     "Verify OTP: Response contains user data": (r) => {
@@ -99,8 +99,7 @@ export default function () {
       },
     }
   );
-
-  // Assertions for the user update response
+  //console.log("update user:", updateRes.json());
   check(updateRes, {
     "User Update: Response contains updated user data": (r) => {
       const updatedUser = r.json();
@@ -154,7 +153,6 @@ export default function () {
   const beacon = generateRandomBeacon();
   // console.log("Generated Beacon:", JSON.stringify(beacon));
 
-  // Example payload using the beacon
   const spacePayload = {
     name: "Test Space",
     type: "room",
@@ -278,7 +276,7 @@ export default function () {
       },
     }
   );
-  //console.log("update space", updateSpaceRes.json())
+  // console.log("update space", updateSpaceRes.json());
   check(updateSpaceRes, {
     "Space Update: Apps added successfully (200)": (r) => r.status === 200,
     "Space Update: Response contains updated space data": (r) => {
@@ -296,7 +294,11 @@ export default function () {
       "Content-Type": "application/json",
     },
   });
-  //console.log("qr code", qrCodeRes.json())
+  //console.log("qr code", qrCodeRes.json());
+  const deepLink = qrCodeRes.json().deepLink;
+  const token = deepLink.match(/token=([^&]+)/)?.[1];
+
+  //console.log("Token:", token);
   check(qrCodeRes, {
     "QR Code Login: Response status 200 (OK)": (r) => r.status === 200,
     "QR Code Login: Response contains QR code URL": (r) =>
@@ -305,7 +307,7 @@ export default function () {
       r.json().deepLink !== null,
   });
 
-  // Test Case 8: Bootup Request with Access Token
+  // Test Case 8: Bootup Request
   const bootupRes = http.get(`${BASE_URL}/user/bootup`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
@@ -340,36 +342,71 @@ export default function () {
       );
     },
   });
-  // const testToken = 'sampleToken123'; // Replace with a valid token for real tests
 
-  // // Make a GET request to the /auth/users/:token endpoint
-  // const authUsersResponse = http.get(`${BASE_URL}/auth/users/${testToken}`, {
-  //   headers: { 'Content-Type': 'application/json' },
-  // });
+  // Test Case 9: Getting users using token
+  const authUsersResponse = http.get(`${BASE_URL}/auth/users/${token}`, {
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      "Content-Type": "application/json",
+    },
+  });
+  //console.log("token verfiy", authUsersResponse.json());
+  check(authUsersResponse, {
+    "Response contains child user array": (r) => Array.isArray(r.json()),
+    "Child users array is empty or has the expected properties": (r) => {
+      const users = r.json();
+      return (
+        Array.isArray(users) &&
+        (users.length === 0 || users.every((u) => u.id && u.name && u.role))
+      );
+    },
+  });
 
-  // // Validate the response
-  // check(authUsersResponse, {
-  //   'status is 200': (r) => r.status === 200,
-  //   'response has data': (r) =>
-  //     r.json() && Array.isArray(r.json()) && r.json().length > 0,
-  // });
+  const userVerifyPayload = {
+    ...verifyUserPayload,
+    token,
+  };
 
-  // // Make a POST request to the /auth/user/verify endpoint
-  // const userVerify = http.post(`${BASE_URL}/auth/user/verify`, JSON.stringify(payload), {
-  //   headers: { 'Content-Type': 'application/json' },
-  // });
-
-  // // Validate the response
-  // check(userVerify, {
-  //   'status is 200': (r) => r.status === 200,
-  //   'response contains tokens': (r) =>
-  //     r.json() &&
-  //     r.json().tokens &&
-  //     r.json().tokens.accessToken &&
-  //     r.json().tokens.refreshToken,
-  //   'response contains device info': (r) =>
-  //     r.json() && r.json().device && r.json().device.id === payload.device.id,
-  // });
+  // Test Case 10: create a child user
+  const userVerify = http.post(
+    `${BASE_URL}/auth/user/verify`,
+    JSON.stringify(userVerifyPayload),
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  //console.log("userVerify", userVerify.json());
+  check(userVerify, {
+    "user verify: Response status 200 (OK)": (r) => r.status === 200,
+    "user verify: Response contains user data": (r) => {
+      const user = r.json().user;
+      return (
+        user &&
+        user.userId &&
+        user.role &&
+        user.name &&
+        typeof user.isManaged === "boolean"
+      );
+    },
+    "user verify: Response contains device data": (r) => {
+      const device = r.json().device;
+      return (
+        device &&
+        device.id &&
+        device.os &&
+        device.appVersion &&
+        device.metadata &&
+        device.permissions
+      );
+    },
+    "user verify: Response contains tokens": (r) => {
+      const tokens = r.json().tokens;
+      return tokens && tokens.accessToken && tokens.refreshToken;
+    },
+  });
 
   sleep(1);
 }
