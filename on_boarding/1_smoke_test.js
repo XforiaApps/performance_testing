@@ -9,8 +9,9 @@ import {
   gps,
   meta,
   apps,
-  verifyUserPayload,
-} from "./utils/utils.js";
+  deviceDetails,
+  generateRandomAlphabeticName,
+} from "../utils/utils.js";
 
 // Test configuration
 export const options = {
@@ -151,10 +152,11 @@ export default function () {
   });
 
   const beacon = generateRandomBeacon();
-  // console.log("Generated Beacon:", JSON.stringify(beacon));
-
+  //  console.log("Generated Beacon:", JSON.stringify(beacon));
+  const randomSpaceName = generateRandomAlphabeticName(6);
   const spacePayload = {
-    name: "Test Space",
+    name: randomSpaceName,
+    landmarkId: "1234",
     type: "room",
     gps,
     beacon: {
@@ -252,7 +254,7 @@ export default function () {
   });
 
   const updateSpacePayload = {
-    name: "Test Space",
+    name: randomSpaceName,
     type: "room",
     gps,
     beacon: {
@@ -276,7 +278,7 @@ export default function () {
       },
     }
   );
-  // console.log("update space", updateSpaceRes.json());
+  //console.log("update space", updateSpaceRes.json());
   check(updateSpaceRes, {
     "Space Update: Apps added successfully (200)": (r) => r.status === 200,
     "Space Update: Response contains updated space data": (r) => {
@@ -361,9 +363,10 @@ export default function () {
       );
     },
   });
-
+  const randomName = generateRandomAlphabeticName(5);
   const userVerifyPayload = {
-    ...verifyUserPayload,
+    username: randomName,
+    device: deviceDetails,
     token,
   };
 
