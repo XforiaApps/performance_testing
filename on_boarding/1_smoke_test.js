@@ -13,6 +13,8 @@ import {
   generateRandomAlphabeticName,
 } from "../utils/utils.js";
 
+import {userInfo} from './smoke_test.js'
+
 // Test configuration
 export const options = {
   vus: 2,
