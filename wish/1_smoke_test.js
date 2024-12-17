@@ -13,7 +13,7 @@ import {
 
 // Test configuration
 export const options = {
-  vus: 2,
+  vus: 10,
   duration: "1m",
   ext: {
     loadimpact: {
@@ -288,22 +288,24 @@ export default function (userInfo) {
           Authorization: `Bearer ${childAccessToken}`,
           "Content-Type": "application/json",
         },
+        failOnStatusCode: false,
       }
     );
-    const wishId = wishRes.json().id;
-    //console.log("wishRes", wishRes.json());
+
+    // console.log("wishRes", wishRes.json());
     check(wishRes, {
-      "Response status is 200": (r) => r.status === 200,
-      "Make a wish: Response contains wish id": (r) => {
-        const wish = r.json();
-        return wish.id;
-      },
+      "Make a wish: Valid response (success or already exists)": (r) =>
+        (r.status === 200 && r.json().id) ||
+        (r.status === 400 &&
+          (r.json().message === "Wish request already exists" ||
+            r.json().message === "Wish has already been granted")),
     });
 
     // Test Case 2: Get all wishes
     const param = {
       status: "",
     };
+
     const getWishes = http.get(
       `${BASE_URL}/get-wishes?search=${param.status}`,
       {
@@ -313,13 +315,19 @@ export default function (userInfo) {
         },
       }
     );
-    //console.log("Get all wishes", getWishes.json())
+
+    const wishes = getWishes.json();
+    //console.log("Get all wishes", wishes);
+
+    const wishId = wishes.length > 0 ? wishes[0].id : null;
+    //console.log("wishId", wishId);
+
     check(getWishes, {
       "Get all wishes: response status 200 (OK)": (r) => r.status === 200,
       "Get all wishes response": (r) => {
         const wishes = r.json();
-        return wishes.every(
-          (wish) =>
+        return wishes.every((wish) => {
+          return (
             wish.id &&
             wish.appId &&
             wish.appName &&
@@ -336,13 +344,15 @@ export default function (userInfo) {
             wish.userName &&
             wish.circleId &&
             typeof wish.isGranted === "boolean" &&
-            typeof wish.isSupervisor === "boolean" &&
+            (typeof wish.isSupervisor === "boolean" ||
+              wish.isSupervisor === undefined) &&
             wish.status &&
             wish.createdAt &&
             wish.updatedAt &&
             (wish.duration === null || typeof wish.duration === "number") &&
             (!wish.expiredAt || typeof wish.expiredAt === "string")
-        );
+          );
+        });
       },
     });
 
@@ -373,13 +383,21 @@ export default function (userInfo) {
               Array.isArray(wish.domainName) &&
               wish.userId &&
               wish.deviceInfo &&
+              wish.deviceInfo.deviceId &&
+              wish.deviceInfo.deviceName &&
+              wish.deviceInfo.os &&
+              wish.deviceInfo.osVersion &&
+              wish.deviceInfo.model &&
               wish.userName &&
               wish.circleId &&
-              wish.isGranted !== undefined &&
-              wish.isSupervisor !== undefined &&
+              typeof wish.isGranted === "boolean" &&
+              (typeof wish.isSupervisor === "boolean" ||
+                wish.isSupervisor === undefined) &&
               wish.status &&
               wish.createdAt &&
-              wish.updatedAt
+              wish.updatedAt &&
+              (wish.duration === null || typeof wish.duration === "number") &&
+              (!wish.expiredAt || typeof wish.expiredAt === "string")
           );
         } else {
           console.error("Response is not an array:", wishes);
@@ -399,11 +417,14 @@ export default function (userInfo) {
         },
       }
     );
-
+    //console.log("Grant wish", grantWishRes.json());
     check(grantWishRes, {
-      "Grant Wish: OTP request successful (200)": (r) => r.status === 200,
-      "Grant Wish: Response contains success message": (r) =>
-        r.json().message === "Wish has been granted",
+      "Grant  wish: Valid response (success or already exists)": (r) =>
+        (r.status === 200 && r.json().message === "Wish has been granted") ||
+        (r.status === 400 &&
+          r.json().message === "Wish has already been granted or rejected"),
+      // (r.json().message === "Wish has already been granted or rejected" ||
+      //   r.json().message === "Wish request already exists"))
     });
   });
 

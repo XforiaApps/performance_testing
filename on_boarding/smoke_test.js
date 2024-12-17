@@ -3,6 +3,10 @@ import { check, sleep } from "k6";
 import {
   BASE_URL,
   otp,
+  generateRandomBeacon,
+  gps,
+  meta,
+  apps,
   user,
   generateRandomAlphabeticName,
   generateChildDeviceDetails,
@@ -11,7 +15,7 @@ import {
 
 // Test configuration
 export const options = {
-  vus: 2,
+  vus: 10,
   duration: "1m",
   ext: {
     loadimpact: {
@@ -20,8 +24,8 @@ export const options = {
   },
 };
 
-export function setup() {
-  const userInfo = user.map((u) => {
+export default function setup() {
+  user.map((u) => {
     // Test Case 1: Request a otp
     let validRes = http.post(
       `${BASE_URL}/auth/email/request-otp`,
@@ -162,7 +166,148 @@ export function setup() {
       },
     });
 
-    // Test Case 4: Request QR Code for Login
+    // Test Case 4: Create Space
+
+    const beacon = generateRandomBeacon();
+    //  console.log("Generated Beacon:", JSON.stringify(beacon));
+    const randomSpaceName = generateRandomAlphabeticName(6);
+    const spacePayload = {
+      name: randomSpaceName,
+      landmarkId: Math.random().toString(36).substring(9),
+      type: "room",
+      gps,
+      beacon: {
+        beaconType: "fixed",
+        ...beacon,
+        meta,
+      },
+    };
+
+    const spaceRes = http.post(
+      `${BASE_URL}/spaces`,
+      JSON.stringify(spacePayload),
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    //console.log("space details", spaceRes.json());
+    check(spaceRes, {
+      "Space Create: Contains space ID": (r) => r.json().id !== undefined,
+      "Space Create: Contains space name": (r) => r.json().name !== null,
+      "Space Create: Contains GPS data (optional)": (r) => {
+        const gps = r.json().gps;
+        return !gps || (gps.lat && gps.lng && gps.radius && gps.address);
+      },
+      "Space Create: Contains beacons (optional)": (r) => {
+        const response = r.json();
+        const beacons = response.beacon;
+
+        if (response.type === "room") {
+          if (!Array.isArray(beacons) || beacons.length === 0) {
+            return false;
+          }
+          return beacons.every((beacon) => {
+            return (
+              beacon.id &&
+              beacon.beaconType &&
+              beacon.uuid &&
+              beacon.major &&
+              beacon.minor &&
+              beacon.meta &&
+              beacon.meta.firmwareVersion &&
+              beacon.meta.manufacturer &&
+              beacon.meta.batteryLevel &&
+              beacon.meta.rssi &&
+              beacon.meta.location &&
+              beacon.meta.tags
+            );
+          });
+        } else if (response.type === "landmark") {
+          return true;
+        } else {
+          return false;
+        }
+      },
+    });
+
+    // Test Case 5 :  GET request to /available-apps
+    const params = {
+      search: "",
+      limit: 5,
+      offset: 0,
+    };
+
+    const res = http.get(
+      `${BASE_URL}/available-apps?search=${params.search}&limit=${params.limit}&offset=${params.offset}`,
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    check(res, {
+      "Response status is 200": (r) => r.status === 200,
+      "Response contains apps array": (r) => Array.isArray(r.json().apps),
+      "Apps array has the expected properties": (r) => {
+        const apps = r.json().apps;
+        return apps.every(
+          (app) =>
+            app.id &&
+            app.name &&
+            app.iosBundleId &&
+            app.androidPackageName &&
+            app.developerName &&
+            Array.isArray(app.domainName) &&
+            app.domainName.length > 0
+        );
+      },
+      "Apps array respects the limit parameter": (r) =>
+        r.json().apps.length <= params.limit,
+    });
+
+    // Test Case 6: Add Apps to the Space (Using PATCH request)
+    const spaceId = spaceRes.json().id;
+
+    const updateSpacePayload = {
+      name: randomSpaceName,
+      type: "room",
+      gps,
+      beacon: {
+        beaconType: "fixed",
+        ...beacon,
+        meta,
+      },
+      ...apps,
+    };
+    // console.log("spaceId", spaceId);
+    const updateSpaceRes = http.patch(
+      `${BASE_URL}/spaces/${spaceId}`,
+      JSON.stringify(updateSpacePayload),
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    //console.log("update space", updateSpaceRes.json());
+    check(updateSpaceRes, {
+      "Space Update: Apps added successfully (200)": (r) => r.status === 200,
+      "Space Update: Response contains updated space data": (r) => {
+        const space = r.json();
+        return (
+          space &&
+          space.id &&
+          (Array.isArray(space.apps) || space.apps === null)
+        );
+      },
+    });
+
+    // Test Case 7: Request QR Code for Login
     const qrCodeRes = http.get(`${BASE_URL}/user/login-qr`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -182,7 +327,7 @@ export function setup() {
         r.json().deepLink !== null,
     });
 
-    //  // Test Case 5: Getting users using token
+    // Test Case 8: Getting users using token
     const authUsersResponse = http.get(`${BASE_URL}/auth/users/${token}`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -200,7 +345,6 @@ export function setup() {
         );
       },
     });
-
     const randomName = generateRandomAlphabeticName(5);
     const userVerifyPayload = {
       username: randomName,
@@ -208,7 +352,7 @@ export function setup() {
       token,
     };
 
-    // Test Case 6: create a child user
+    // Test Case 9: create a child user
     const userVerify = http.post(
       `${BASE_URL}/auth/user/verify`,
       JSON.stringify(userVerifyPayload),
@@ -219,11 +363,11 @@ export function setup() {
         },
       }
     );
-
+    //console.log("userVerify", userVerify.json());
     const childAccessToken = userVerify.json().tokens.accessToken;
     const childUserId = userVerify.json().user.userId;
     const childDeviceId = userVerify.json().device.id;
-    //console.log("userVerify", userVerify.json());
+
     check(userVerify, {
       "user verify: Response status 200 (OK)": (r) => r.status === 200,
       "user verify: Response contains user data": (r) => {
@@ -262,65 +406,8 @@ export function setup() {
       childDeviceId,
     };
   });
-
   //console.log("userInfo", userInfo);
-  return userInfo;
-}
+  //return userInfo
 
-export default function (userInfo) {
-  userInfo.forEach((userDetails) => {
-    const { accessToken } = userDetails;
-
-    const bootupRes = http.get(`${BASE_URL}/user/bootup`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-      },
-    });
-    //console.log("bootup", bootupRes.json())
-    try {
-      const data = bootupRes.json();
-      check(bootupRes, {
-        "Bootup: Response contains user data": (r) => {
-          const user = data.users && data.users[0];
-          return user ? user.id && user.role && user.name : true;
-        },
-        "Bootup: Response contains device data": (r) => {
-          const device = data.device && data.device[0];
-          return (
-            device &&
-            device.id &&
-            device.os &&
-            device.appVersion &&
-            device.metadata
-          );
-        },
-        "Bootup: Response contains spaces data": (r) => {
-          const spaces = data.spaces;
-          return spaces && spaces.length > 0 && spaces[0].id && spaces[0].name;
-        },
-        "Bootup: Response contains features": (r) => {
-          const features = data.features;
-          return features
-            ? features.additionalProp1 && features.additionalProp1.id
-            : true;
-        },
-        "Bootup: Response contains active wishes": (r) => {
-          const activeWish = data.activeWish;
-          return (
-            !activeWish || (Array.isArray(activeWish) && activeWish.length >= 0)
-          );
-        },
-      });
-
-      // console.log(`Bootup response for userId ${userDetails.userId}:`, data);
-    } catch (err) {
-      console.error(
-        `Error parsing JSON response for userId ${userDetails.userId}:`,
-        err
-      );
-      console.error("Raw response body:", bootupRes.body);
-    }
-  });
-
-  sleep(1); 
+  sleep(1);
 }

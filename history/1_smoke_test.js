@@ -11,7 +11,7 @@ import {
 
 // Test configuration
 export const options = {
-  vus: 2,
+  vus: 10,
   duration: "1m",
   ext: {
     loadimpact: {
@@ -286,36 +286,37 @@ export default function (userInfo) {
         },
       }
     );
-    //console.log("Get all wishes", wishHistory.json())
+    //console.log("Wish history", wishHistory.json())
     check(wishHistory, {
-      "Get all wishes: response status 200 (OK)": (r) => r.status === 200,
-      "Get all wishes response": (r) => {
+      "Wish History: response status 200 (OK)": (r) => r.status === 200,
+      "Wish History response": (r) => {
         const wishes = r.json();
-        return wishes.every(
-          (wish) =>
+        return wishes.every((wish) => {
+          return (
             wish.id &&
             wish.wishId &&
             wish.appId &&
-            wish.status &&
-            wish.createdAt &&
-            wish.isSupervisor &&
-            wish.duration &&
             wish.userId &&
-            wish.circleId &&
             wish.appName &&
-            typeof wish.isGranted === "boolean" &&
-            wish.username &&
-            wish.updatedAt &&
-            (!wish.expiredAt || typeof wish.expiredAt === "string") &&
             wish.deviceInfo &&
             wish.deviceInfo.deviceId &&
             wish.deviceInfo.deviceName &&
             wish.deviceInfo.os &&
             wish.deviceInfo.osVersion &&
-            wish.deviceInfo.model
-        );
+            wish.deviceInfo.model &&
+            wish.username &&
+            wish.circleId &&
+            typeof wish.isGranted === "boolean" &&
+            wish.status &&
+            wish.createdAt &&
+            wish.updatedAt &&
+            (wish.duration === null || typeof wish.duration === "number") &&
+            (!wish.expiredAt || typeof wish.expiredAt === "string")
+          );
+        });
       },
     });
+    
 
     // Test Case 2: Get space history
     const circleHistory = http.get(

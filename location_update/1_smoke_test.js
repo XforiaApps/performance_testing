@@ -13,7 +13,7 @@ import {
 } from "../utils/source.js";
 // Test configuration
 export const options = {
-  vus: 2,
+  vus: 10,
   duration: "1m",
   ext: {
     loadimpact: {
