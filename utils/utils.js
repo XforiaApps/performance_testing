@@ -89,7 +89,6 @@ export const validPayload = { email: email };
 export const verifyPayload = {
   email: email,
   otp: otp,
-  device: deviceDetails,
 };
 
 export const updatePayload = {

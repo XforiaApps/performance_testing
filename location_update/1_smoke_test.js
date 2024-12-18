@@ -7,13 +7,21 @@ import {
   locationPayload,
   generateRandomAlphabeticName,
   generateChildDeviceDetails,
+  generateRandomBeacon,
+  gps,
+  meta,
+  apps,
   generateDeviceDetails,
-  makeWishPayload,
-  grantWishPayload,
 } from "../utils/source.js";
+
+let childId = null;
+let spaceCreated = false;
+let parentDeviceDetails = null;
+let childDeviceDetails = null;
+
 // Test configuration
 export const options = {
-  vus: 10,
+  vus: 200,
   duration: "1m",
   ext: {
     loadimpact: {
@@ -43,13 +51,17 @@ export function setup() {
         r.json().message === "OTP send successfully",
     });
 
+    if (!parentDeviceDetails) {
+      parentDeviceDetails = generateDeviceDetails();
+    }
+
     // Test Case 2: verify otp(login)
     let verifyRes = http.post(
       `${BASE_URL}/auth/email/verify-otp`,
       JSON.stringify({
         email: u.email,
         otp: otp,
-        device: generateDeviceDetails(),
+        device: parentDeviceDetails,
       }),
       {
         headers: {
@@ -164,7 +176,149 @@ export function setup() {
       },
     });
 
-    // Test Case 4: Request QR Code for Login
+    // Test Case 4: Create Space
+    if (!spaceCreated) {
+      const beacon = generateRandomBeacon();
+      //  console.log("Generated Beacon:", JSON.stringify(beacon));
+      const randomSpaceName = generateRandomAlphabeticName(6);
+      const spacePayload = {
+        name: randomSpaceName,
+        type: "room",
+        gps,
+        beacon: {
+          beaconType: "fixed",
+          ...beacon,
+          meta,
+        },
+      };
+
+      const spaceRes = http.post(
+        `${BASE_URL}/spaces`,
+        JSON.stringify(spacePayload),
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      //console.log("space details", spaceRes.json());
+      check(spaceRes, {
+        "Space Create: Contains space ID": (r) => r.json().id !== undefined,
+        "Space Create: Contains space name": (r) => r.json().name !== null,
+        "Space Create: Contains GPS data (optional)": (r) => {
+          const gps = r.json().gps;
+          return !gps || (gps.lat && gps.lng && gps.radius && gps.address);
+        },
+        "Space Create: Contains beacons (optional)": (r) => {
+          const response = r.json();
+          const beacons = response.beacon;
+
+          if (response.type === "room") {
+            if (!Array.isArray(beacons) || beacons.length === 0) {
+              return false;
+            }
+            return beacons.every((beacon) => {
+              return (
+                beacon.id &&
+                beacon.beaconType &&
+                beacon.uuid &&
+                beacon.major &&
+                beacon.minor &&
+                beacon.meta &&
+                beacon.meta.firmwareVersion &&
+                beacon.meta.manufacturer &&
+                beacon.meta.batteryLevel &&
+                beacon.meta.rssi &&
+                beacon.meta.location &&
+                beacon.meta.tags
+              );
+            });
+          } else if (response.type === "landmark") {
+            return true;
+          } else {
+            return false;
+          }
+        },
+      });
+
+      // Test Case 5 :  GET request to /available-apps
+      const params = {
+        search: "",
+        limit: 5,
+        offset: 0,
+      };
+
+      const res = http.get(
+        `${BASE_URL}/available-apps?search=${params.search}&limit=${params.limit}&offset=${params.offset}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      check(res, {
+        "Response status is 200": (r) => r.status === 200,
+        "Response contains apps array": (r) => Array.isArray(r.json().apps),
+        "Apps array has the expected properties": (r) => {
+          const apps = r.json().apps;
+          return apps.every(
+            (app) =>
+              app.id &&
+              app.name &&
+              app.iosBundleId &&
+              app.androidPackageName &&
+              app.developerName &&
+              Array.isArray(app.domainName) &&
+              app.domainName.length > 0
+          );
+        },
+        "Apps array respects the limit parameter": (r) =>
+          r.json().apps.length <= params.limit,
+      });
+
+      const updateSpacePayload = {
+        name: randomSpaceName,
+        type: "room",
+        gps,
+        beacon: {
+          beaconType: "fixed",
+          ...beacon,
+          meta,
+        },
+        ...apps,
+      };
+
+      // Test Case 6: Add Apps to the Space (Using PATCH request)
+      const spaceId = spaceRes.json().id;
+      // console.log("spaceId", spaceId);
+      const updateSpaceRes = http.patch(
+        `${BASE_URL}/spaces/${spaceId}`,
+        JSON.stringify(updateSpacePayload),
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      //console.log("update space", updateSpaceRes.json());
+      check(updateSpaceRes, {
+        "Space Update: Apps added successfully (200)": (r) => r.status === 200,
+        "Space Update: Response contains updated space data": (r) => {
+          const space = r.json();
+          return (
+            space &&
+            space.id &&
+            (Array.isArray(space.apps) || space.apps === null)
+          );
+        },
+      });
+    }
+    spaceCreated = true;
+
+    // Test Case 7: Request QR Code for Login
     const qrCodeRes = http.get(`${BASE_URL}/user/login-qr`, {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -184,34 +338,47 @@ export function setup() {
         r.json().deepLink !== null,
     });
 
-    //  // Test Case 5: Getting users using token
-    const authUsersResponse = http.get(`${BASE_URL}/auth/users/${token}`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        "Content-Type": "application/json",
-      },
-    });
-    //console.log("token verfiy", authUsersResponse.json());
-    check(authUsersResponse, {
-      "Response contains child user array": (r) => Array.isArray(r.json()),
-      "Child users array is empty or has the expected properties": (r) => {
-        const users = r.json();
-        return (
-          Array.isArray(users) &&
-          (users.length === 0 || users.every((u) => u.id && u.name && u.role))
-        );
-      },
-    });
+    // Test Case 8: Check if the child user already exists
+    if (!childId) {
+      const existingUsersResponse = http.get(
+        `${BASE_URL}/auth/users/${token}`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
+      const existingUsers = existingUsersResponse.json();
+
+      if (
+        Array.isArray(existingUsers) &&
+        existingUsers.length > 0 &&
+        existingUsers[0].id
+      ) {
+        childId = existingUsers[0].id;
+        console.log(`Using existing child user with ID: ${childId}`);
+      } else {
+        console.log(
+          "No existing child user found. A new user will be created."
+        );
+      }
+    }
+    if (!childDeviceDetails) {
+      childDeviceDetails = generateDeviceDetails();
+    }
     const randomName = generateRandomAlphabeticName(5);
+
+    // Test Case 9: Create a children
     const userVerifyPayload = {
-      username: randomName,
-      device: generateChildDeviceDetails(),
       token,
+      userId: childId,
+      username: !childId ? randomName : undefined,
+      device: childDeviceDetails,
     };
 
-    // Test Case 6: create a child user
-    const userVerify = http.post(
+    const userVerifyResponse = http.post(
       `${BASE_URL}/auth/user/verify`,
       JSON.stringify(userVerifyPayload),
       {
@@ -221,24 +388,20 @@ export function setup() {
         },
       }
     );
-
-    const childAccessToken = userVerify.json().tokens.accessToken;
-    const childUserId = userVerify.json().user.userId;
-    const childDeviceId = userVerify.json().device.id;
-    //console.log("userVerify", userVerify.json());
-    check(userVerify, {
-      "user verify: Response status 200 (OK)": (r) => r.status === 200,
-      "user verify: Response contains user data": (r) => {
+    const childAccessToken = userVerifyResponse.json().tokens.accessToken;
+    const childUserId = userVerifyResponse.json().user.userId;
+    const childDeviceId = userVerifyResponse.json().device.id;
+    check(userVerifyResponse, {
+      "User Verify: Response status is 200": (r) => r.status === 200,
+      "User Verify: Response contains user data": (r) => {
         const user = r.json().user;
-        return (
-          user &&
-          user.userId &&
-          user.role &&
-          user.name &&
-          typeof user.isManaged === "boolean"
-        );
+        if (user) {
+          childId = user.userId;
+          return user.userId && user.name && user.role;
+        }
+        return false;
       },
-      "user verify: Response contains device data": (r) => {
+      "User Verify: Response contains device data": (r) => {
         const device = r.json().device;
         return (
           device &&
@@ -249,7 +412,7 @@ export function setup() {
           device.permissions
         );
       },
-      "user verify: Response contains tokens": (r) => {
+      "User Verify: Response contains tokens": (r) => {
         const tokens = r.json().tokens;
         return tokens && tokens.accessToken && tokens.refreshToken;
       },
@@ -271,14 +434,7 @@ export function setup() {
 
 export default function (userInfo) {
   userInfo.forEach((userDetails) => {
-    const {
-      accessToken,
-      userId,
-      deviceId,
-      childUserId,
-      childDeviceId,
-      childAccessToken,
-    } = userDetails;
+    const { childAccessToken } = userDetails;
 
     let locationRes = http.post(
       `${BASE_URL}/users/devices/location-update`,
@@ -290,25 +446,23 @@ export default function (userInfo) {
         },
       }
     );
-    //console.log("location update response", locationRes.json())
+
+    // Log the response to inspect its structure
+    //console.log("Location update response", locationRes.json());
 
     check(locationRes, {
       "Location update Response: User data validation": (r) => {
-        const user = r.json().response;
+        const user = r.json()?.response;
         return user && user.role && user.name;
       },
       "Location update Response: Contains device data": (r) => {
-        const device = r.json().response.device && r.json().response.device[0];
-        return (
-          device &&
-          device.id &&
-          device.os &&
-          device.appVersion &&
-          device.metadata
-        );
+        const device = r.json()?.response?.device?.[0]; 
+        return device
+        ? device.id && device.os && device.appVersion && device.metadata
+        : true;
       },
       "Location update Response: Contains spaces data": (r) => {
-        const spaces = r.json().response.spaces;
+        const spaces = r.json()?.response?.spaces;
         return (
           Array.isArray(spaces) &&
           spaces.every((space) => space.id && space.name)

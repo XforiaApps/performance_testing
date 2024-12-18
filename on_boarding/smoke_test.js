@@ -15,7 +15,7 @@ import {
 
 // Test configuration
 export const options = {
-  vus: 10,
+  vus: 100,
   duration: "1m",
   ext: {
     loadimpact: {
@@ -173,7 +173,6 @@ export default function setup() {
     const randomSpaceName = generateRandomAlphabeticName(6);
     const spacePayload = {
       name: randomSpaceName,
-      landmarkId: Math.random().toString(36).substring(9),
       type: "room",
       gps,
       beacon: {
