@@ -1,4 +1,4 @@
-export const BASE_URL = "https://pgapi-qa.pp.klava.app";
+export const BASE_URL = "https://pgapi-dev.pp.klava.app";
 
 export function generateRandomEmail(domain = "xforia.com") {
   const randomString = Math.random().toString(36).substring(7);
@@ -92,7 +92,7 @@ export const verifyPayload = {
 };
 
 export const updatePayload = {
-  name: "Add Name",
+  name: generateRandomAlphabeticName(),
 };
 
 export const gps = {

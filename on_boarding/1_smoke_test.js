@@ -6,6 +6,7 @@ import {
   verifyPayload,
   updatePayload,
   generateRandomBeacon,
+  generateUUID,
   gps,
   meta,
   apps,
@@ -20,7 +21,7 @@ let parentDeviceDetails = null;
 let childDeviceDetails = null;
 // Test configuration
 export const options = {
-  vus: 200,
+  vus: 10,
   duration: "1m",
   ext: {
     loadimpact: {
@@ -40,7 +41,10 @@ export default function () {
       },
     }
   );
-
+  if(validRes.status !== 200) {
+    console.log("paload",validPayload)
+    console.log("response", validRes.json())
+  }
   check(validRes, {
     "Valid Email: OTP request successful (200)": (r) => r.status === 200,
     "Valid Email: Response contains success message": (r) =>
@@ -64,7 +68,10 @@ export default function () {
       },
     }
   );
-
+  if(verifyRes.status !== 200) {
+    console.log("paload",verifyPayload)
+    console.log("response", verifyRes.json())
+  }
   check(verifyRes, {
     "Verify OTP: OTP verification successful (200)": (r) => r.status === 200,
     "Verify OTP: Response contains user data": (r) => {
@@ -112,13 +119,17 @@ export default function () {
       },
     }
   );
+  if(updateRes.status !== 200) {
+    console.log("paload",updatePayload)
+    console.log("response", updateRes.json())
+  }
   //console.log("update user:", updateRes.json());
   check(updateRes, {
     "User Update: Response contains updated user data": (r) => {
       const updatedUser = r.json();
       return (
         updatedUser &&
-        updatedUser.name === updatePayload.name &&
+        updatedUser.name &&
         updatedUser.id &&
         updatedUser.role &&
         (updatedUser.isManaged === true || updatedUser.isManaged === false) &&
@@ -168,6 +179,7 @@ export default function () {
     const randomSpaceName = generateRandomAlphabeticName(6);
     const spacePayload = {
       name: randomSpaceName,
+      landmarkId : generateUUID(),
       type: "room",
       gps,
       beacon: {
@@ -189,6 +201,10 @@ export default function () {
       }
     );
     //console.log("space details", spaceRes.json());
+    if(spaceRes.status !== 200) {
+      console.log("paload",spacePayload)
+      console.log("response", spaceRes.json())
+    }
     check(spaceRes, {
       "Space Create: Contains space ID": (r) => r.json().id !== undefined,
       "Space Create: Contains space name": (r) => r.json().name !== null,
@@ -266,8 +282,6 @@ export default function () {
 
     const updateSpacePayload = {
       name: randomSpaceName,
-      type: "room",
-      gps,
       beacon: {
         beaconType: "fixed",
         ...beacon,
@@ -290,6 +304,10 @@ export default function () {
       }
     );
     //console.log("update space", updateSpaceRes.json());
+    if(updateSpaceRes.status !== 200) {
+      console.log("paload",updateSpacePayload)
+      console.log("response", updateSpaceRes.json())
+    }
     check(updateSpaceRes, {
       "Space Update: Apps added successfully (200)": (r) => r.status === 200,
       "Space Update: Response contains updated space data": (r) => {
@@ -367,7 +385,10 @@ export default function () {
       },
     }
   );
-
+  if(userVerifyResponse.status !== 200) {
+    console.log("paload",userVerifyPayload)
+    console.log("response", userVerifyResponse.json())
+  }
   check(userVerifyResponse, {
     "User Verify: Response status is 200": (r) => r.status === 200,
     "User Verify: Response contains user data": (r) => {

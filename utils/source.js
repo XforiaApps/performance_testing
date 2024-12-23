@@ -201,7 +201,7 @@ export const user = [
   { email: "tprice169-dev@xforia.com" },
 ];
 
-export const BASE_URL = "https://pgapi-qa.pp.klava.app";
+export const BASE_URL = "https://pgapi-dev.pp.klava.app";
 //https://pgapi-qa.pp.klava.app/
 
 export function generateRandomEmail(domain = "xforia.com") {
@@ -333,7 +333,7 @@ export const verifyPayload = {
 };
 
 export const updatePayload = {
-  name: "Add Name",
+  name: generateRandomAlphabeticName(),
 };
 
 export const gps = {
