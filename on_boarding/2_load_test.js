@@ -23,9 +23,9 @@ let childDeviceDetails = null;
 // Test configuration
 export const options = {
   stages: [
-    { duration: "1m", target: 200 }, // Ramp-up to 200 VUs over 1 minute
-    { duration: "5m", target: 200 }, // Maintain 200 VUs for 5 minutes
-    { duration: "1m", target: 0 },   // Ramp-down to 0 VUs over 1 minute
+    { duration: "30s", target: 10000 }, // Ramp-up to 200 VUs over 1 minute
+    { duration: "3m", target: 10000 }, // Maintain 200 VUs for 5 minutes
+    { duration: "30s", target: 0 },   // Ramp-down to 0 VUs over 1 minute
   ],
 };
 
@@ -41,8 +41,7 @@ export default function () {
     }
   );
   if(validRes.status !== 200) {
-    console.log("paload",validPayload)
-    console.log("response", validRes.json())
+    console.log("status", validRes.status, "payload",validPayload, "response", validRes.json())
   }
   check(validRes, {
     "Valid Email: OTP request successful (200)": (r) => r.status === 200,
@@ -54,6 +53,8 @@ export default function () {
     parentDeviceDetails = generateDeviceDetails();
   }
 
+  sleep (100);
+  
   // Test Case 2: verify otp(login)
   let verifyRes = http.post(
     `${BASE_URL}/auth/email/verify-otp`,
@@ -68,8 +69,7 @@ export default function () {
     }
   );
   if(verifyRes.status !== 200) {
-    console.log("paload",verifyPayload)
-    console.log("response", verifyRes.json())
+    console.log("status = ", verifyRes.status, ", paload = ",verifyPayload, ", response = ", verifyRes.json())
   }
   check(verifyRes, {
     "Verify OTP: OTP verification successful (200)": (r) => r.status === 200,
@@ -250,6 +250,7 @@ export default function () {
       offset: 0,
     };
 
+    sleep (100);
     const res = http.get(
       `${BASE_URL}/available-apps?search=${params.search}&limit=${params.limit}&offset=${params.offset}`,
       {
@@ -289,6 +290,7 @@ export default function () {
       ...apps,
     };
 
+    sleep (100);
     // Test Case 6: Add Apps to the Space (Using PATCH request)
     const spaceId = spaceRes.json().id;
     // console.log("spaceId", spaceId);
@@ -374,6 +376,7 @@ export default function () {
     device: childDeviceDetails,
   };
 
+  sleep (100);
   const userVerifyResponse = http.post(
     `${BASE_URL}/auth/user/verify`,
     JSON.stringify(userVerifyPayload),
@@ -415,5 +418,5 @@ export default function () {
     },
   });
 
-  sleep(1);
+  sleep(100);
 }
