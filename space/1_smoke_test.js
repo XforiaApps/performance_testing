@@ -13,22 +13,18 @@ import {
   generateDeviceDetails,
 } from "../utils/source.js";
 
-let childId = null;
-let spaceCreated = false;
-let parentDeviceDetails = null;
-let childDeviceDetails = null;
-
 // Test configuration
 export const options = {
-  vus: 2,
-  duration: "2m",
-  setupTimeout: "2m", // Increase this to match the expected setup time
+  vus: 1,
+  duration: "1m",
   ext: {
     loadimpact: {
-      name: "API Test Suite",
+      name: "space creation test",
     },
   },
 };
+
+let parentDeviceDetails = null, spaceCreated = null
 
 export function setup() {
   const userInfo = user.map((u) => {
@@ -338,59 +334,6 @@ export function setup() {
     //     r.json().deepLink !== null,
     // });
 
-    // Test Case 8: Check if the child user already exists
-    if (!childId) {
-      const existingUsersResponse = http.get(
-        `${BASE_URL}/auth/users/${token}`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const existingUsers = existingUsersResponse.json();
-
-      if (
-        Array.isArray(existingUsers) &&
-        existingUsers.length > 0 &&
-        existingUsers[0].id
-      ) {
-        childId = existingUsers[0].id;
-        console.log(`Using existing child user with ID: ${childId}`);
-      } else {
-        console.log(
-          "No existing child user found. A new user will be created."
-        );
-      }
-    }
-    if (!childDeviceDetails) {
-      childDeviceDetails = generateDeviceDetails();
-    }
-    const randomName = generateRandomAlphabeticName(5);
-
-    // Test Case 9: Create a children
-    const userVerifyPayload = {
-      token,
-      userId: childId,
-      username: !childId ? randomName : undefined,
-      device: childDeviceDetails,
-    };
-
-    const userVerifyResponse = http.post(
-      `${BASE_URL}/auth/user/verify`,
-      JSON.stringify(userVerifyPayload),
-      {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-    const childAccessToken = userVerifyResponse.json().tokens.accessToken;
-    const childUserId = userVerifyResponse.json().user.userId;
-    const childDeviceId = userVerifyResponse.json().device.id;
     // check(userVerifyResponse, {
     //   "User Verify: Response status is 200": (r) => r.status === 200,
     //   "User Verify: Response contains user data": (r) => {
@@ -422,65 +365,86 @@ export function setup() {
       userId,
       parentName,
       deviceId,
-      childAccessToken,
-      childUserId,
-      childDeviceId,
     };
   });
-
-  //console.log("userInfo", userInfo);
-  return userInfo;
+  return userInfo
 }
 
 export default function (userInfo) {
   userInfo.forEach((userDetails) => {
-    const { accessToken } = userDetails;
+    const { accessToken } =
+      userDetails;
 
-    const bootupRes = http.get(`${BASE_URL}/user/bootup`, {
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
+      const beacon = generateRandomBeacon();
+      //  console.log("Generated Beacon:", JSON.stringify(beacon));
+      const randomSpaceName = generateRandomAlphabeticName(6);
+      const spacePayload = {
+        name: randomSpaceName,
+        landmarkId: "1234",
+        type: "room",
+        ...gps,
+        beacon: {
+          beaconType: "fixed",
+          ...beacon,
+          meta,
+        },
+      };
+
+    // Test Case 4: Create Space
+    const spaceRes = http.post(
+      `${BASE_URL}/spaces`,
+      JSON.stringify(spacePayload),
+      {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    //console.log("space details", spaceRes.json());
+    if (spaceRes.status !== 200) {
+      console.log("paload", spacePayload)
+      console.log("response", spaceRes.json())
+    }
+    check(spaceRes, {
+      "Space Create: Contains space ID": (r) => r.json().id !== undefined,
+      "Space Create: Contains space name": (r) => r.json().name !== null,
+      "Space Create: Contains GPS data (optional)": (r) => {
+        const gps = r.json().gps;
+        return !gps || (gps.lat && gps.lng && gps.radius && gps.address);
+      },
+      "Space Create: Contains beacons (optional)": (r) => {
+        const response = r.json();
+        const beacons = response.beacon;
+
+        if (response.type === "room") {
+          if (!Array.isArray(beacons) || beacons.length === 0) {
+            return false;
+          }
+          return beacons.every((beacon) => {
+            return (
+              beacon.id &&
+              beacon.beaconType &&
+              beacon.uuid &&
+              beacon.major &&
+              beacon.minor &&
+              beacon.meta &&
+              beacon.meta.firmwareVersion &&
+              beacon.meta.manufacturer &&
+              beacon.meta.batteryLevel &&
+              beacon.meta.rssi &&
+              beacon.meta.location &&
+              beacon.meta.tags
+            );
+          });
+        } else if (response.type === "landmark") {
+          return true;
+        } else {
+          return false;
+        }
       },
     });
-    //console.log("bootup", bootupRes.json());
-    try {
-      const data = bootupRes.json();
-      check(bootupRes, {
-        "Bootup: Response contains user data": (r) => {
-          const user = data.users && data.users[0];
-          return user ? user.id && user.role && user.name : true;
-        },
-        "Bootup: Response contains device data": (r) => {
-          const device = data.device && data.device[0];
-          return device
-            ? device.id && device.os && device.appVersion && device.metadata
-            : true;
-        },
-        "Bootup: Response contains spaces data": (r) => {
-          const spaces = data.spaces;
-          return spaces && spaces.length > 0 && spaces[0].id && spaces[0].name;
-        },
-        "Bootup: Response contains features": (r) => {
-          const features = data.features;
-          return features
-            ? features.additionalProp1 && features.additionalProp1.id
-            : true;
-        },
-        "Bootup: Response contains active wishes": (r) => {
-          const activeWish = data.activeWish;
-          return (
-            !activeWish || (Array.isArray(activeWish) && activeWish.length >= 0)
-          );
-        },
-      });
+  })
 
-      // console.log(`Bootup response for userId ${userDetails.userId}:`, data);
-    } catch (err) {
-      console.error(
-        `Error parsing JSON response for userId ${userDetails.userId}:`,
-        err
-      );
-    }
-  });
-
-  sleep(1);
+  sleep(1); // Wait for 1 second before the next iteration
 }

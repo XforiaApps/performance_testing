@@ -336,12 +336,21 @@ export const updatePayload = {
   name: generateRandomAlphabeticName(),
 };
 
+const getRandomLatLng = () => {
+  const randomLat = (Math.random() * (90 - (-90)) + (-90)).toFixed(4); // Latitude between -90 and 90
+  const randomLng = (Math.random() * (180 - (-180)) + (-180)).toFixed(4); // Longitude between -180 and 180
+  return {
+    lat: parseFloat(randomLat),
+    lng: parseFloat(randomLng),
+  };
+};
+
 export const gps = {
-  lat: 37.7749,
-  lng: -122.4194,
-  radius: 100,
+  ...getRandomLatLng(),
+  radius: 50,
   address: "123 Test St, Test City",
 };
+
 export const meta = {
   batteryLevel: "80%",
   rssi: "-65",

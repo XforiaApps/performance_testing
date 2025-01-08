@@ -28,6 +28,7 @@ export const options = {
     loadimpact: {
       name: "smoke test",
     },
+    setupTimeout: "2m", // Increase this to match the expected setup time
   },
 };
 

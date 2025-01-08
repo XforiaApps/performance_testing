@@ -21,7 +21,7 @@ let childDeviceDetails = null;
 
 // Test configuration
 export const options = {
-  vus: 200,
+  vus: 2,
   duration: "1m",
   ext: {
     loadimpact: {

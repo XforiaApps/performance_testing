@@ -21,7 +21,7 @@ let parentDeviceDetails = null;
 let childDeviceDetails = null;
 // Test configuration
 export const options = {
-  vus: 10,
+  vus: 4,
   duration: "1m",
   ext: {
     loadimpact: {
@@ -41,6 +41,7 @@ export default function () {
       },
     }
   );
+  console.log("Valid Response ==============>", validRes)
   if(validRes.status !== 200) {
     console.log("paload",validPayload)
     console.log("response", validRes.json())

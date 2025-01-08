@@ -20,14 +20,11 @@ let childDeviceDetails = null;
 
 // Test configuration
 export const options = {
-  vus: 2,
-  duration: "2m",
-  setupTimeout: "2m", // Increase this to match the expected setup time
-  ext: {
-    loadimpact: {
-      name: "API Test Suite",
-    },
-  },
+  stages: [
+    { duration: "1m", target: 200 }, // Ramp-up to 200 VUs over 1 minute
+    { duration: "5m", target: 200 }, // Maintain 200 VUs for 5 minutes
+    { duration: "1m", target: 0 },   // Ramp-down to 0 VUs over 1 minute
+  ],
 };
 
 export function setup() {

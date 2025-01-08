@@ -45,6 +45,8 @@ export default function () {
       r.json().message === "OTP send successfully",
   });
 
+  sleep(5);
+
   // Test Case 2: verify otp(login)
   let verifyRes = http.post(
     `${BASE_URL}/auth/email/verify-otp`,
