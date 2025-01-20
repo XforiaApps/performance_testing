@@ -1,9 +1,11 @@
 export const BASE_URL = "https://pgapi-dev.pp.klava.app";
-
+// export const BASE_URL = "https://pgapi-qa.npd.parentgeenee.io";
 export function generateRandomEmail(domain = "xforia.com") {
   const randomString = Math.random().toString(36).substring(7);
   return `${randomString}-dev@${domain}`;
 } // email : 8 digit
+
+
 export function generateRandomAlphabeticName(length = 8) {
   let result = "";
   const characters = "abcdefghijklmnopqrstuvwxyz"; // Define alphabetic characters
@@ -94,6 +96,17 @@ export const verifyPayload = {
 export const updatePayload = {
   name: generateRandomAlphabeticName(),
 };
+
+export function updateSpacePayload(appsRes) {
+  return {
+    name: generateRandomAlphabeticName(6),
+    type: "landmark",
+    gps,
+    apps: appsRes.json().apps,
+    allow: true
+  }
+  
+}
 
 export const gps = {
   lat: 37.7749,
@@ -234,3 +247,23 @@ export const devicePayload = {
     batteryLevel: 80,
   }
 }
+
+export const generateCustomEmails = (count) => {
+  const SUFFIX = '-dev@xforia.com';
+  const emails = new Set();
+
+  while (emails.size < count) {
+    // Generate a timestamp-based unique identifier
+    const timestamp = Date.now();
+    const randomSuffix = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    const prefix = `user${timestamp}${randomSuffix}`;
+
+    const email = `${prefix}${SUFFIX}`;
+    emails.add(email); // Ensure uniqueness
+  }
+
+  // Convert the Set into an array of objects with "email" key
+  return Array.from(emails).map((email) => ({ email }));
+};
+
+
