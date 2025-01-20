@@ -15,15 +15,25 @@ import { generateRandomEmail, generateDeviceDetails, generateRandomAlphabeticNam
 let spaceCreated = false;
 let childUserId = false;
 let childDeviceDetails = false
+
 export const options = {
-  vus: 4,
-  duration: "1m",
+  scenarios: {
+    steadyLoad: {
+      executor: "constant-arrival-rate",
+      rate: 1, // Approximately 0.463 users per second (can be approximated to 1 every 2 seconds)
+      timeUnit: "1s", // New users arrive every second
+      duration: "1h", // Test duration of 1 hour
+      preAllocatedVUs: 50, // Pre-allocate 50 VUs (this can be adjusted)
+      maxVUs: 5000, // Allow up to 5000 VUs
+    },
+  },
   ext: {
     loadimpact: {
-      name: "smoke test",
+      name: "1,667 unique users over 1 hour",
     },
   },
 };
+
 
 export default function () {
   const email =  generateRandomEmail()
