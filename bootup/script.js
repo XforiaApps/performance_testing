@@ -23,8 +23,8 @@ import {
 
 // Test configuration
 export const options = {
-    vus: 10000, // 100k virtual users
-    duration: "2m", // 1 hour test duration
+    vus: 100000, // 100k virtual users
+    duration: "1h", // 1 hour test duration
     setupTimeout: "10m", // Allow up to 1 hour for setup to complete
     ext: {
         loadimpact: {
@@ -33,7 +33,7 @@ export const options = {
     },
 };
 
-const user = generateCustomEmails(100)
+const user = generateCustomEmails(1000)
 export function setup() {
     let childDeviceDetails = null;
     const userInfo = user.map((u) => {
@@ -93,7 +93,7 @@ export function setup() {
             childAccessToken,
             childUserId,
         };
-    });
+    }).filter((info) => info !== null);
     return userInfo;
 }
 
