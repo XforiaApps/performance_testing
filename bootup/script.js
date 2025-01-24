@@ -19,24 +19,23 @@ import {
 
 import {
     generateCustomEmails,
-    gps
 } from "../utils/utils.js";
 
 // Test configuration
 export const options = {
-    vus: 2,
-    duration: "2m",
-    setupTimeout: "4m",
+    vus: 10000, // 100k virtual users
+    duration: "2m", // 1 hour test duration
+    setupTimeout: "10m", // Allow up to 1 hour for setup to complete
     ext: {
         loadimpact: {
-            name: "API Test Suite",
+            name: "API Test Suite for 100k Users",
         },
     },
 };
 
+const user = generateCustomEmails(100)
 export function setup() {
     let childDeviceDetails = null;
-    const user = generateCustomEmails(100)
     const userInfo = user.map((u) => {
         let payload = {
             email: u.email
@@ -95,7 +94,6 @@ export function setup() {
             childUserId,
         };
     });
-
     return userInfo;
 }
 
