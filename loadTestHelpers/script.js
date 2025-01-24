@@ -63,6 +63,23 @@ export function updateUser(accessToken, userId) {
       },
     }
   );
+
+  // Check if the response has a valid body
+  if (!res || !res.body) {
+    console.error("Space Create: Empty or no response body");
+    return null; // Return null or handle the error as needed
+  }
+
+  let jsonResponse;
+  try {
+    jsonResponse = res.json();
+  } catch (error) {
+    console.error(
+      `Space Create: Failed to parse JSON. Status: ${res.status}, Body: ${res.body}`
+    );
+    return null; // Return null or handle the error as needed
+  }
+  
   check(res, {
     "User Update: Response contains updated user data": (r) => {
       const updatedUser = r.json();
@@ -83,10 +100,8 @@ export function createSpace(accessToken) {
   const beacon = generateRandomBeacon();
   const spacePayload = {
     name: generateRandomAlphabeticName(6),
-    // landmarkId: generateUUID(),
     type: "landmark",
     gps,
-    // beacon: { beaconType: "fixed", ...beacon, meta },
   };
 
   const res = http.post(
@@ -100,18 +115,34 @@ export function createSpace(accessToken) {
     }
   );
 
-  check(res, {
-    "Space Create: Contains space ID": (r) => r.json().id !== undefined,
-    "Space Create: Contains space name": (r) => r.json().name !== null,
-    "Space Create: Contains GPS data (optional)": (r) => {
-      const gps = r.json().gps;
+  // Check if the response has a valid body
+  if (!res || !res.body) {
+    console.error("Space Create: Empty or no response body");
+    return null; // Return null or handle the error as needed
+  }
+
+  let jsonResponse;
+  try {
+    jsonResponse = res.json();
+  } catch (error) {
+    console.error(
+      `Space Create: Failed to parse JSON. Status: ${res.status}, Body: ${res.body}`
+    );
+    return null; // Return null or handle the error as needed
+  }
+
+  // Validate response content
+  const valid = check(res, {
+    "Space Create: Contains space ID": (r) => jsonResponse.id !== undefined,
+    "Space Create: Contains space name": (r) => jsonResponse.name !== null,
+    "Space Create: Contains GPS data (optional)": () => {
+      const gps = jsonResponse.gps;
       return !gps || (gps.lat && gps.lng && gps.radius && gps.address);
     },
-    "Space Create: Contains beacons (optional)": (r) => {
-      const response = r.json();
-      const beacons = response.beacon;
+    "Space Create: Contains beacons (optional)": () => {
+      const beacons = jsonResponse.beacon;
 
-      if (response.type === "room") {
+      if (jsonResponse.type === "room") {
         if (!Array.isArray(beacons) || beacons.length === 0) {
           return false;
         }
@@ -131,7 +162,7 @@ export function createSpace(accessToken) {
             beacon.meta.tags
           );
         });
-      } else if (response.type === "landmark") {
+      } else if (jsonResponse.type === "landmark") {
         return true;
       } else {
         return false;
@@ -139,8 +170,15 @@ export function createSpace(accessToken) {
     },
   });
 
+  if (!valid) {
+    console.error(
+      `Space Create: Validation failed. Status: ${res.status}, Body: ${res.body}`
+    );
+  }
+
   return res;
 }
+
 
 export function getAvailableApps(accessToken) {
   const params = { search: "", limit: 5, offset: 0 };
