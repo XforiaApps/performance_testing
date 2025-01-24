@@ -2,15 +2,11 @@ import http from "k6/http";
 import { check, sleep } from "k6";
 import {
   BASE_URL,
-  verifyPayload,
   updatePayload,
   generateRandomBeacon,
-  generateUUID,
   gps,
-  meta,
   generateDeviceDetails,
   generateRandomAlphabeticName,
-  generateCustomEmails,
 } from "../utils/utils.js";
 
 export function requestOTP(payload) {
@@ -87,10 +83,10 @@ export function createSpace(accessToken) {
   const beacon = generateRandomBeacon();
   const spacePayload = {
     name: generateRandomAlphabeticName(6),
-    landmarkId: generateUUID(),
-    type: "room",
+    // landmarkId: generateUUID(),
+    type: "landmark",
     gps,
-    beacon: { beaconType: "fixed", ...beacon, meta },
+    // beacon: { beaconType: "fixed", ...beacon, meta },
   };
 
   const res = http.post(
@@ -103,45 +99,53 @@ export function createSpace(accessToken) {
       },
     }
   );
-
   check(res, {
-    "Space Create: Contains space ID": (r) => r.json().id !== undefined,
-    "Space Create: Contains space name": (r) => r.json().name !== null,
-    "Space Create: Contains GPS data (optional)": (r) => {
-      const gps = r.json().gps;
-      return !gps || (gps.lat && gps.lng && gps.radius && gps.address);
-    },
-    "Space Create: Contains beacons (optional)": (r) => {
-      const response = r.json();
-      const beacons = response.beacon;
-
-      if (response.type === "room") {
-        if (!Array.isArray(beacons) || beacons.length === 0) {
+    "Space Create: Response body is not empty": (r) => r.body && r.body.trim() !== "", // Check if body is not empty
+  });
+  
+  if (res.status === 200 && (res.body && res.body.trim() !== "")) {
+    check(res, {
+      "Space Create: Contains space ID": (r) => r.json().id !== undefined,
+      "Space Create: Contains space name": (r) => r.json().name !== null,
+      "Space Create: Contains GPS data (optional)": (r) => {
+        const gps = r.json().gps;
+        return !gps || (gps.lat && gps.lng && gps.radius && gps.address);
+      },
+      "Space Create: Contains beacons (optional)": (r) => {
+        const response = r.json();
+        const beacons = response.beacon;
+  
+        if (response.type === "room") {
+          if (!Array.isArray(beacons) || beacons.length === 0) {
+            return false;
+          }
+          return beacons.every((beacon) => {
+            return (
+              beacon.id &&
+              beacon.beaconType &&
+              beacon.uuid &&
+              beacon.major &&
+              beacon.minor &&
+              beacon.meta &&
+              beacon.meta.firmwareVersion &&
+              beacon.meta.manufacturer &&
+              beacon.meta.batteryLevel &&
+              beacon.meta.rssi &&
+              beacon.meta.location &&
+              beacon.meta.tags
+            );
+          });
+        } else if (response.type === "landmark") {
+          return true;
+        } else {
           return false;
         }
-        return beacons.every((beacon) => {
-          return (
-            beacon.id &&
-            beacon.beaconType &&
-            beacon.uuid &&
-            beacon.major &&
-            beacon.minor &&
-            beacon.meta &&
-            beacon.meta.firmwareVersion &&
-            beacon.meta.manufacturer &&
-            beacon.meta.batteryLevel &&
-            beacon.meta.rssi &&
-            beacon.meta.location &&
-            beacon.meta.tags
-          );
-        });
-      } else if (response.type === "landmark") {
-        return true;
-      } else {
-        return false;
-      }
-    },
-  });
+      },
+    });
+  } else {
+    console.error("Error: Response body is empty or status is not 200");
+    throw new Error("Response body is empty or status is not 200");
+  }
   return res;
 }
 

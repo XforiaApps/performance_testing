@@ -1,10 +1,9 @@
 export const BASE_URL = "https://pgapi-dev.pp.klava.app";
-// export const BASE_URL = "https://pgapi-qa.npd.parentgeenee.io";
 
 export function generateRandomEmail(domain = "xforia.com") {
   const randomString = Math.random().toString(36).substring(7); // Random alphanumeric string
   const timestamp = Date.now(); // Current timestamp in milliseconds
-  return `${randomString}-${timestamp}-dev@${domain}`;
+  return `${randomString}-dev@${domain}`;
 }
 
 

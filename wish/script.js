@@ -108,7 +108,7 @@ export default function (userInfo) {
         };
         
         const wishResponse = makeAWish(childAccessToken, wishPayload);  // Ensure async call
-        console.log(wishResponse)
+
         // Proceed only if the wish response does not indicate a pre-existing wish
         if (wishResponse) {
           const grantWishPayload = {
@@ -118,8 +118,6 @@ export default function (userInfo) {
           };
           grantWish(wishResponse.id, grantWishPayload, accessToken);
           const locationData = locationUpdate(childAccessToken, locationPayload)
-          console.log("\n")
-          console.log(locationData.json().response.activeWish)
         }
       });
 
