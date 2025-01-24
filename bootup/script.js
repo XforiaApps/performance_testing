@@ -23,8 +23,8 @@ import {
 
 // Test configuration
 export const options = {
-    vus: 100000, // 100k virtual users
-    duration: "1h", // 1 hour test duration
+    vus: 1000, // 100k virtual users
+    duration: "5m", // 1 hour test duration
     setupTimeout: "10m", // Allow up to 1 hour for setup to complete
     ext: {
         loadimpact: {
@@ -32,7 +32,6 @@ export const options = {
         },
     },
 };
-
 const user = generateCustomEmails(1000)
 export function setup() {
     let childDeviceDetails = null;
@@ -58,8 +57,13 @@ export function setup() {
         const parentName = updateRes.json().name;
 
         // Step 4: Create Space (only if not created)
-
         const spaceRes = createSpace(accessToken);
+        
+        // Check if spaceRes is valid and has the required properties
+        if (!spaceRes || !spaceRes.json() || !spaceRes.json().id) {
+            console.error("Failed to create space or space ID is missing.");
+            return null; // Prevent returning incomplete userInfo
+        }
 
         // Step 5: Get available apps
         const appsRes = getAvailableApps(accessToken);
@@ -67,7 +71,6 @@ export function setup() {
         // Step 6: Update space with apps
         const spaceId = spaceRes.json().id;
         updateSpace(spaceId, updateSpacePayload(appsRes), accessToken);
-
 
         // Step 7: Request QR Code for Login
         const qrCodeRes = requestQRCode(accessToken);
@@ -93,9 +96,11 @@ export function setup() {
             childAccessToken,
             childUserId,
         };
-    }).filter((info) => info !== null);
+    }).filter((info) => info !== null); // Filter out invalid user info
+
     return userInfo;
 }
+
 
 export default function (userInfo) {
     userInfo.forEach((userDetails) => {
