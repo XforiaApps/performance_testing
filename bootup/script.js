@@ -25,19 +25,19 @@ import {
 export const options = {
     setupTimeout: '90m', // Allow setup to run for up to 90 minutes
     scenarios: {
-      steadyLoad: {
-        executor: "constant-arrival-rate",
-        rate: 278, // ~278 users per second to reach 1,000,000 users in 1 hour
-        timeUnit: "1s", // New users arrive every second
-        duration: "1h", // Test duration of 1 hour
-        preAllocatedVUs: 2000, // Pre-allocate 2000 VUs (adjust based on capacity)
-        maxVUs: 15000, // Allow up to 15,000 VUs
-      },
+        steadyLoad: {
+            executor: "constant-arrival-rate",
+            rate: 417, // ~417 users per second to reach 1,500,000 users in 1 hour
+            timeUnit: "1s", // New users arrive every second
+            duration: "1h", // Test duration of 1 hour
+            preAllocatedVUs: 3000, // Pre-allocate 3000 VUs (adjust based on capacity)
+            maxVUs: 20000, // Allow up to 20,000 VUs
+        },
     },
     ext: {
-      loadimpact: {
-        name: "1,000,000 users over 1 hour",
-      },
+        loadimpact: {
+            name: "1,500,000 users over 1 hour",
+        },
     },
 };
 
