@@ -1,6 +1,7 @@
 import { sleep } from "k6";
 import {
     generateDeviceDetails,
+    generateRandomEmail,
     updateSpacePayload,
 } from "../utils/utils.js";
 import {
@@ -41,18 +42,18 @@ export const options = {
 };
 
 
-const user = generateCustomEmails(100)
+// const user = generateCustomEmails(100)
 export function setup() {
+    const email = generateRandomEmail()
     let childDeviceDetails = null;
-    const userInfo = user.map((u) => {
         let payload = {
-            email: u.email
+            email
         }
         // Step 1: Request OTP
         requestOTP(payload);
 
         payload = {
-            email: u.email,
+            email,
             otp: "1234",
             device: generateDeviceDetails()
         }
@@ -105,17 +106,17 @@ export function setup() {
             childAccessToken,
             childUserId,
         };
-    }).filter((info) => info !== null); // Filter out invalid user info
 
-    return userInfo;
+    // return userInfo;
 }
 
 
-export default function (userInfo) {
-    userInfo.forEach((userDetails) => {
+export default function (userDetails) {
+    
+    // userInfo.forEach((userDetails) => {
         const { accessToken, userId } = userDetails;
         bootup(accessToken, userId);
-    });
+    // });
 
     sleep(1);
 }
