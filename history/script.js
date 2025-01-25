@@ -2,6 +2,7 @@ import { sleep } from "k6";
 import {
     generateDeviceDetails,
     generateRandomAlphabeticName,
+    generateRandomEmail,
     updateSpacePayload,
 } from "../utils/utils.js";
 import {
@@ -25,29 +26,40 @@ import {
     gps
 } from "../utils/utils.js";
 
-// Test configuration
+
 export const options = {
-    vus: 2,
-    duration: "2m",
-    setupTimeout: "2m",
+    setupTimeout: '90m', // Allow setup to run for up to 90 minutes
+    scenarios: {
+        steadyLoad: {
+            executor: "constant-arrival-rate",
+            rate: 417, // ~417 users per second to reach 1,500,000 users in 1 hour
+            timeUnit: "1s", // New users arrive every second
+            duration: "1h", // Test duration of 1 hour
+            preAllocatedVUs: 3000, // Pre-allocate 3000 VUs (adjust based on capacity)
+            maxVUs: 20000, // Allow up to 20,000 VUs
+        },
+    },
     ext: {
         loadimpact: {
-            name: "API Test Suite",
+            name: "1,500,000 users over 1 hour",
         },
     },
 };
 
+
+
+// const user = generateCustomEmails(100)
 export function setup() {
-    const user = generateCustomEmails(2)
-    const userInfo = user.map((u) => {
+    const email = generateRandomEmail()
+    let childDeviceDetails = null;
         let payload = {
-            email: u.email
+            email
         }
         // Step 1: Request OTP
         requestOTP(payload);
 
         payload = {
-            email: u.email,
+            email,
             otp: "1234",
             device: generateDeviceDetails()
         }
@@ -61,15 +73,19 @@ export function setup() {
         const parentName = updateRes.json().name;
 
         // Step 4: Create Space (only if not created)
-
         const spaceRes = createSpace(accessToken);
+        
+        // Check if spaceRes is valid and has the required properties
+        if (!spaceRes || !spaceRes.json() || !spaceRes.json().id) {
+            console.error("Failed to create space or space ID is missing.");
+            return null; // Prevent returning incomplete userInfo
+        }
 
         // Step 5: Get available apps
         const appsRes = getAvailableApps(accessToken);
 
         // Step 6: Update space with apps
         const spaceId = spaceRes.json().id;
-
         updateSpace(spaceId, updateSpacePayload(appsRes), accessToken);
 
         // Step 7: Request QR Code for Login
@@ -81,8 +97,8 @@ export function setup() {
         let childId = checkIfChildAlreadyExists(token, accessToken);
 
         // Step 9: Create child device details if not exists
-        const childDeviceDetails = generateDeviceDetails();
-        
+        childDeviceDetails = generateDeviceDetails();
+
         // Step 10: Create and verify child user
         const userVerifyPayload = createUserVerifyPayload(token, childId, childDeviceDetails);
         const userVerifyResponse = verifyUser(userVerifyPayload, accessToken);
@@ -96,18 +112,17 @@ export function setup() {
             childAccessToken,
             childUserId,
         };
-    });
 
-    return userInfo;
+    // return userInfo;
 }
 
 export default function (userInfo) {
-    const params = { limit: 10, offset: 0 };
+    const params = { limit: 100, offset: 0 };
 
-    userInfo.forEach((userDetails) => {
-        getWishHistory(userDetails, params);
-        getCirlceHistory(userDetails, params);
-    });
+    // userInfo.forEach((userDetails) => {
+        getWishHistory(userInfo, params);
+        getCirlceHistory(userInfo, params);
+    // });
 
     sleep(1);
 }

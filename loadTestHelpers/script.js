@@ -181,9 +181,9 @@ export function createSpace(accessToken) {
 
 
 export function getAvailableApps(accessToken) {
-  const params = { search: "", limit: 5, offset: 0 };
+  const params = { search: "", limit: 100, offset: 0 };
   const res = http.get(
-    `${BASE_URL}/available-apps?search=${params.search}&limit=${params.limit}&offset=${params.offset}`,
+    `${BASE_URL}/available-apps`,
     {
       headers: {
         Authorization: `Bearer ${accessToken}`,
@@ -213,7 +213,6 @@ export function getAvailableApps(accessToken) {
     "Apps array respects the limit parameter": (r) =>
       r.json().apps.length <= params.limit,
   });
-
   return res;
 }
 
@@ -394,7 +393,6 @@ export function getWishHistory(userDetails, params) {
       },
     }
   );
-
   check(wishHistory, {
     'Wish History: response status 200 (OK)': (r) => r.status === 200,
     'Wish History response': (r) => {
