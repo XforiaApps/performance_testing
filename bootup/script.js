@@ -21,18 +21,27 @@ import {
     generateCustomEmails,
 } from "../utils/utils.js";
 
-// Test configuration
 export const options = {
-    vus: 1000, // 100k virtual users
-    duration: "5m", // 1 hour test duration
-    setupTimeout: "10m", // Allow up to 1 hour for setup to complete
+    setupTimeout: '90m', // Allow setup to run for up to 90 minutes
+    scenarios: {
+      steadyLoad: {
+        executor: "constant-arrival-rate",
+        rate: 83, // ~83 users per second to reach 300,000 users in 1 hour
+        timeUnit: "1s", // New users arrive every second
+        duration: "1h", // Test duration of 1 hour
+        preAllocatedVUs: 1000, // Pre-allocate 1000 VUs (adjust based on capacity)
+        maxVUs: 10000, // Allow up to 10,000 VUs
+      },
+    },
     ext: {
-        loadimpact: {
-            name: "API Test Suite for 100k Users",
-        },
+      loadimpact: {
+        name: "300,000 users over 1 hour",
+      },
     },
 };
-const user = generateCustomEmails(1000)
+
+
+const user = generateCustomEmails(100)
 export function setup() {
     let childDeviceDetails = null;
     const userInfo = user.map((u) => {
