@@ -20,16 +20,16 @@ export const options = {
   scenarios: {
     steadyLoad: {
       executor: "constant-arrival-rate",
-      rate: 139, // 139 users per second (this will generate ~500,000 users in 1 hour)
-      timeUnit: "1s", // New users arrive every second
+      rate: 28, // 28 requests per second (this will generate ~100,000 requests in 1 hour)
+      timeUnit: "1s", // New requests arrive every second
       duration: "1h", // Test duration of 1 hour
-      preAllocatedVUs: 1000, // Pre-allocate 1000 VUs (this can be adjusted)
-      maxVUs: 10000, // Allow up to 10,000 VUs
+      preAllocatedVUs: 250, // Pre-allocate 250 VUs (this can be adjusted)
+      maxVUs: 2500, // Allow up to 2,500 VUs
     },
   },
   ext: {
     loadimpact: {
-      name: "500,000 users over 1 hour (approx. 500,000 target)",
+      name: "100,000 requests over 1 hour (approx. 100,000 target)",
     },
   },
 };
