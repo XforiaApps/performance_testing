@@ -16,19 +16,27 @@ import {
 
 // Test configuration
 export const options = {
-    vus: 2,
-    duration: "1m",
-    setupTimeout: "2m",
+    setupTimeout: '90m', // Allow setup to run for up to 90 minutes
+    scenarios: {
+        steadyLoad: {
+            executor: "constant-arrival-rate",
+            rate: 417, // ~417 users per second to reach 1,500,000 users in 1 hour
+            timeUnit: "1s", // New users arrive every second
+            duration: "1h", // Test duration of 1 hour
+            preAllocatedVUs: 3000, // Pre-allocate 3000 VUs (adjust based on capacity)
+            maxVUs: 20000, // Allow up to 20,000 VUs
+        },
+    },
     ext: {
         loadimpact: {
-            name: "API Test Suite",
+            name: "1,500,000 users over 1 hour",
         },
     },
 };
 
 export function setup() {
-    const users = generateCustomEmails(2);
-    const userInfo = users.map((user) => {
+    // const users = generateCustomEmails(2);
+    // const userInfo = users.map((user) => {
         const email = generateRandomEmail()
         let validPayload = { email }
         // Step 1: Request OTP
@@ -53,16 +61,16 @@ export function setup() {
         verifyRes.json().user.userId;
 
         return {accessToken}
-    })
-    return userInfo
+    // })
+    // return userInfo
 }
 
 export default function (userInfo) {
-    userInfo.forEach((user) => {
-        const { accessToken } = user;
+    // userInfo.forEach((user) => {
+        const { accessToken } = userInfo;
         const params = { search: '', limit: 5, offset: 0 };
         getAvailableApps(accessToken, params);
-    });
+    // });
 
     sleep(1);
 }

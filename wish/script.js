@@ -117,7 +117,7 @@ export default function (userInfo) {
             isSupervisor: true,
           };
           grantWish(wishResponse.id, grantWishPayload, accessToken);
-          const locationData = locationUpdate(childAccessToken, locationPayload)
+        //   const locationData = locationUpdate(childAccessToken, locationPayload)
         }
       });
 
