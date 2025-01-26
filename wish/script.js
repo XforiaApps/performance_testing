@@ -1,6 +1,7 @@
 import { sleep } from "k6";
 import {
     generateDeviceDetails,
+    generateRandomEmail,
     locationPayload,
     updateSpacePayload,
 } from "../utils/utils.js";
@@ -19,7 +20,7 @@ import {
     grantWish,
     createDevice,
     locationUpdate,
-} from "../loadTestHelpers/index.js";
+} from "../loadTestHelpers/script.js";
 
 import {
     generateCustomEmails,
@@ -28,27 +29,35 @@ import {
 
 // Test configuration
 export const options = {
-    vus: 10,
-    duration: "1m",
-    setupTimeout: "1m",
+    setupTimeout: '90m', // Allow setup to run for up to 90 minutes
+    scenarios: {
+        steadyLoad: {
+            executor: "constant-arrival-rate",
+            rate: 417, // ~417 users per second to reach 1,500,000 users in 1 hour
+            timeUnit: "1s", // New users arrive every second
+            duration: "1h", // Test duration of 1 hour
+            preAllocatedVUs: 3000, // Pre-allocate 3000 VUs (adjust based on capacity)
+            maxVUs: 20000, // Allow up to 20,000 VUs
+        },
+    },
     ext: {
         loadimpact: {
-            name: "API Test Suite",
+            name: "1,500,000 users over 1 hour",
         },
     },
 };
 
 export function setup() {
-    const user = generateCustomEmails(50)
-    const userInfo = user.map((u) => {
+    const email = generateRandomEmail()
+    // const userInfo = user.map((u) => {
         let payload = {
-            email: u.email
+            email
         }
         // Step 1: Request OTP
         requestOTP(payload);
 
         payload = {
-            email: u.email,
+            email,
             otp: "1234",
             device: generateDeviceDetails(),
         }
@@ -94,32 +103,32 @@ export function setup() {
             childAccessToken,
             childUserId,
         };
-    });
+    // });
 
-    return userInfo;
+    // return userInfo;
 }
 
 export default function (userInfo) {
-    userInfo.forEach(async (userDetails) => {
-        const { accessToken, childAccessToken } = userDetails;
+    // userInfo.forEach(async (userDetails) => {
+        const { accessToken, childAccessToken } = userInfo;
       
         const wishPayload = {
           appId: 1,
         };
         
-        const wishResponse = makeAWish(childAccessToken, wishPayload);  // Ensure async call
+        makeAWish(childAccessToken, wishPayload);  // Ensure async call
 
         // Proceed only if the wish response does not indicate a pre-existing wish
-        if (wishResponse) {
-          const grantWishPayload = {
-            duration: 10,
-            isGranted: true,
-            isSupervisor: true,
-          };
-          grantWish(wishResponse.id, grantWishPayload, accessToken);
+        // if (wishResponse) {
+        //   const grantWishPayload = {
+        //     duration: 10,
+        //     isGranted: true,
+        //     isSupervisor: true,
+        //   };
+        //   grantWish(wishResponse.id, grantWishPayload, accessToken);
         //   const locationData = locationUpdate(childAccessToken, locationPayload)
-        }
-      });
+        // }
+    //   });
 
     sleep(1);
 }
