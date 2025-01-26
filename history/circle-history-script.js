@@ -120,7 +120,7 @@ export default function (userInfo) {
     const params = { limit: 100, offset: 0 };
 
     // userInfo.forEach((userDetails) => {
-        
+        // getWishHistory(userInfo, params);
         getCirlceHistory(userInfo, params);
     // });
 
