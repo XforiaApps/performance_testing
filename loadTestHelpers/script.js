@@ -114,7 +114,6 @@ export function createSpace(accessToken) {
       },
     }
   );
-
   // Check if the response has a valid body
   if (!res || !res.body) {
     console.error("Space Create: Empty or no response body");

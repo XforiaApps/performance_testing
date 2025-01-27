@@ -10,9 +10,8 @@ import {
   checkIfChildAlreadyExists,
   verifyUser,
 } from "../loadTestHelpers/script.js";
-import { generateRandomEmail, generateDeviceDetails, generateRandomAlphabeticName, generateRandomBeacon, meta, apps, updateSpacePayload, } from "../utils/utils.js";
+import { generateRandomEmail, generateDeviceDetails, generateRandomAlphabeticName, updateSpacePayload, } from "../utils/utils.js";
 
-let spaceCreated = false;
 let childUserId = false;
 let childDeviceDetails = false
 
