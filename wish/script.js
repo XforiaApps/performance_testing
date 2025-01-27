@@ -22,30 +22,26 @@ import {
     locationUpdate,
 } from "../loadTestHelpers/script.js";
 
-import {
-    generateCustomEmails,
-    gps
-} from "../utils/utils.js";
 
-// Test configuration
 export const options = {
-    setupTimeout: '90m', // Allow setup to run for up to 90 minutes
+    setupTimeout: '10m', // Allow setup to run for up to 10 minutes
     scenarios: {
         steadyLoad: {
             executor: "constant-arrival-rate",
-            rate: 417, // ~417 users per second to reach 1,500,000 users in 1 hour
+            rate: 278, // ~278 users per second to reach 3,000,000 users in 3 hours
             timeUnit: "1s", // New users arrive every second
-            duration: "1h", // Test duration of 1 hour
-            preAllocatedVUs: 3000, // Pre-allocate 3000 VUs (adjust based on capacity)
-            maxVUs: 20000, // Allow up to 20,000 VUs
+            duration: "3h", // Test duration of 3 hours
+            preAllocatedVUs: 3000, // Pre-allocate enough VUs to handle the load
+            maxVUs: 5000, // Allow up to 5000 VUs for peak concurrency
         },
     },
     ext: {
         loadimpact: {
-            name: "1,500,000 users over 1 hour",
+            name: "3,000,000 users over 3 hours",
         },
     },
 };
+
 
 export function setup() {
     const email = generateRandomEmail()
