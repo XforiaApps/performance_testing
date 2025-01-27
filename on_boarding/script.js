@@ -36,8 +36,8 @@ export const options = {
 
 
 export default function () {
-  const email =  generateRandomEmail()
-  let validPayload = {email}
+  const email = generateRandomEmail()
+  let validPayload = { email }
   // Step 1: Request OTP
   const otpRes = requestOTP(validPayload);
   if (otpRes.status !== 200) {
@@ -67,26 +67,24 @@ export default function () {
   }
 
   // Step 4: Create Space (if not already created)
-  if (!spaceCreated) {
-    const spaceRes = createSpace(accessToken);
-    if (spaceRes.status !== 200) {
-      console.error("Failed to create space:", spaceRes.body);
-      return;
-    }
 
-    // Step 5: Get Available Apps
-    const appsRes = getAvailableApps(accessToken);
-    if (appsRes.status !== 200) {
-      console.error("Failed to fetch available apps:", appsRes.body);
-      return;
-    }
-    // Step 6: Update space
-
-    const spaceId = spaceRes.json().id;
-
-    updateSpace(spaceId, updateSpacePayload(appsRes), accessToken)
-    spaceCreated = true;
+  const spaceRes = createSpace(accessToken);
+  if (spaceRes.status !== 200) {
+    console.error("Failed to create space:", spaceRes.body);
+    return;
   }
+
+  // Step 5: Get Available Apps
+  const appsRes = getAvailableApps(accessToken);
+  if (appsRes.status !== 200) {
+    console.error("Failed to fetch available apps:", appsRes.body);
+    return;
+  }
+  // Step 6: Update space
+  const spaceId = spaceRes.json().id;
+
+  updateSpace(spaceId, updateSpacePayload(appsRes), accessToken)
+
 
   // Step 6: Request QR Code
   const qrRes = requestQRCode(accessToken);
@@ -103,7 +101,7 @@ export default function () {
   }
 
   childDeviceDetails = generateDeviceDetails();
-  
+
   const randomName = generateRandomAlphabeticName()
   const payload = {
     token,
