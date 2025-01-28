@@ -17,21 +17,36 @@ let childDeviceDetails = false
 
 export const options = {
   scenarios: {
-    steadyLoad: {
-      executor: "constant-arrival-rate",
-      rate: 28, // 28 requests per second (this will generate ~100,000 requests in 1 hour)
-      timeUnit: "1s", // New requests arrive every second
-      duration: "1h", // Test duration of 1 hour
-      preAllocatedVUs: 250, // Pre-allocate 250 VUs (this can be adjusted)
-      maxVUs: 2500, // Allow up to 2,500 VUs
+    load_test: {
+      executor: 'ramping-vus',
+      startVUs: 0,
+      stages: [
+        // Ramp up from 0 to 100k users over 20 seconds
+        { duration: '20s', target: 100000 },
+        // Stay at 100k users for 1 minute
+        { duration: '1m', target: 100000 },
+        // Graceful ramp down over 10 seconds
+        { duration: '10s', target: 0 }
+      ],
     },
   },
+  // Thresholds for monitoring test health
+  thresholds: {
+    http_req_duration: ['p(95)<2000'], // 95% of requests should complete within 2s
+    http_req_failed: ['rate<0.01'],    // Less than 1% of requests should fail
+  },
+  // Ensure enough time for setup
+  setupTimeout: '2m',
+  // Test metadata
   ext: {
     loadimpact: {
-      name: "100,000 requests over 1 hour (approx. 100,000 target)",
+      name: '100k Concurrent Users Load Test',
+      notes: 'High concurrency test with 100k VUs for 1 minute'
     },
   },
 };
+
+
 
 
 export default function () {

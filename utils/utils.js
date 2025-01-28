@@ -109,12 +109,21 @@ export function updateSpacePayload(appsRes) {
   
 }
 
+const generatedCoordinates = new Set();
+
 const getRandomLatLng = () => {
-  const randomLat = (Math.random() * (90 - (-90)) + (-90)).toFixed(4); // Latitude between -90 and 90
-  const randomLng = (Math.random() * (180 - (-180)) + (-180)).toFixed(4); // Longitude between -180 and 180
+  let lat, lng;
+
+  do {
+    lat = (Math.random() * (90 - (-90)) + (-90)).toFixed(4); // Latitude between -90 and 90
+    lng = (Math.random() * (180 - (-180)) + (-180)).toFixed(4); // Longitude between -180 and 180
+  } while (generatedCoordinates.has(`${lat},${lng}`));
+
+  generatedCoordinates.add(`${lat},${lng}`);
+
   return {
-    lat: parseFloat(randomLat),
-    lng: parseFloat(randomLng),
+    lat: parseFloat(lat),
+    lng: parseFloat(lng),
   };
 };
 
