@@ -15,6 +15,7 @@ export function requestOTP(payload) {
     JSON.stringify(payload),
     { headers: { "Content-Type": "application/json" } }
   );
+  console.log("Response ====>", res.body)
 
   check(res, {
     "Valid Email: OTP request successful (200)": (r) => r.status === 200,
@@ -33,6 +34,8 @@ export function verifyOTP(payload) {
     }),
     { headers: { "Content-Type": "application/json" } }
   );
+  console.log("Response ====>", res.body)
+
   check(res, {
     "Verify OTP: OTP verification successful (200)": (r) => r.status === 200,
     "Verify OTP: Response contains user data": (r) => {
@@ -66,6 +69,8 @@ export function updateUser(accessToken, userId) {
 
   // Check if the response has a valid body
   if (!res || !res.body) {
+    console.log("Response Body ==>", res.body)
+    console.log("Response Status ==>", res.status)
     console.error("Space Create: Empty or no response body");
     return null; // Return null or handle the error as needed
   }

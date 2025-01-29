@@ -21,13 +21,12 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '5m', target: 50000 },  // Ramp up to 25,000 VUs in 5 minutes
-        { duration: '1m', target: 0 },      // Ramp down to 0 VUs in 1 minute
+        { duration: '5m', target: 50000 }, 
+        { duration: '1m', target: 0 },     
       ],
     },
   },
 };
-
 
 
 
