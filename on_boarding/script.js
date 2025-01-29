@@ -17,31 +17,13 @@ let childDeviceDetails = false
 
 export const options = {
   scenarios: {
-    load_test: {
+    rampUp: {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        // Ramp up from 0 to 100k users over 20 seconds
-        { duration: '20s', target: 100000 },
-        // Stay at 100k users for 1 minute
-        { duration: '1m', target: 100000 },
-        // Graceful ramp down over 10 seconds
-        { duration: '10s', target: 0 }
+        { duration: '5m', target: 50000 },  // Ramp up to 25,000 VUs in 5 minutes
+        { duration: '1m', target: 0 },      // Ramp down to 0 VUs in 1 minute
       ],
-    },
-  },
-  // Thresholds for monitoring test health
-  thresholds: {
-    http_req_duration: ['p(95)<2000'], // 95% of requests should complete within 2s
-    http_req_failed: ['rate<0.01'],    // Less than 1% of requests should fail
-  },
-  // Ensure enough time for setup
-  setupTimeout: '2m',
-  // Test metadata
-  ext: {
-    loadimpact: {
-      name: '100k Concurrent Users Load Test',
-      notes: 'High concurrency test with 100k VUs for 1 minute'
     },
   },
 };

@@ -19,24 +19,16 @@ import {
 } from "../loadTestHelpers/script.js";
 
 export const options = {
-    setupTimeout: '10m', // Allow setup to run for up to 10 minutes
     scenarios: {
-        steadyLoad: {
-            executor: "constant-arrival-rate",
-            rate: 417, // ~417 users per second to reach 3,000,000 users in 2 hours
-            timeUnit: "1s", // New users arrive every second
-            duration: "2h", // Test duration of 2 hours
-            preAllocatedVUs: 3000, // Pre-allocate enough VUs to handle the load
-            maxVUs: 5000, // Allow up to 5000 VUs for peak concurrency
-        },
+      load: {
+        executor: 'constant-arrival-rate',
+        duration: '5m',
+        rate: 5000,                         // 5000 request
+        timeUnit: '1s',                    // in 60 minutes
+        preAllocatedVUs: 100,               // maximum 100 concurrent requests
+      },
     },
-    ext: {
-        loadimpact: {
-            name: "3,000,000 users over 2 hours",
-        },
-    },
-};
-
+  };
 
 // const user = generateCustomEmails(100)
 export function setup() {
@@ -108,11 +100,7 @@ export function setup() {
 
 
 export default function (userDetails) {
-
-    // userInfo.forEach((userDetails) => {
     const { accessToken, userId } = userDetails;
     bootup(accessToken, userId);
-    // });
-
     sleep(1);
 }
