@@ -261,6 +261,8 @@ export function requestQRCode(accessToken) {
       r.json().deepLink !== null,
   });
 
+
+
   return res;
 }
 
@@ -294,13 +296,12 @@ export function createUserVerifyPayload(token, userId) {
   };
 }
 
-export function verifyUser(payload, accessToken) {
+export function verifyUser(payload) {
   const response = http.post(
     `${BASE_URL}/auth/user/verify`,
     JSON.stringify(payload),
     {
       headers: {
-        Authorization: `Bearer ${accessToken}`,
         "Content-Type": "application/json",
       },
     }
@@ -321,7 +322,7 @@ export function verifyUser(payload, accessToken) {
     },
   });
 
-  return response;
+  return res;
 }
 
 export function createDevice(userId, childDeviceDetails, accessToken) {

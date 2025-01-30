@@ -12,7 +12,6 @@ import {
 } from "../loadTestHelpers/script.js";
 import { generateRandomEmail, generateDeviceDetails, generateRandomAlphabeticName, updateSpacePayload, } from "../utils/utils.js";
 
-let childUserId = false;
 let childDeviceDetails = false
 
 export const options = {
@@ -21,35 +20,38 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 0,
       stages: [
-        { duration: '5m', target: 50000 }, 
-        { duration: '1m', target: 0 },     
+        { duration: '1m', target: 100 },  
       ],
     },
   },
 };
 
 
-
 export default function () {
-  const email = generateRandomEmail()
-  let validPayload = { email }
+  const email = generateRandomEmail();
+  let validPayload = { email };
+
   // Step 1: Request OTP
   const otpRes = requestOTP(validPayload);
   if (otpRes.status !== 200) {
     console.error("Failed to request OTP:", otpRes.body);
     return;
   }
+  sleep(Math.random() * 3); 
+
   validPayload = {
     email,
     otp: "1234",
     device: generateDeviceDetails(),
-  }
+  };
+
   // Step 2: Verify OTP
   const verifyRes = verifyOTP(validPayload);
   if (verifyRes.status !== 200) {
     console.error("Failed to verify OTP:", verifyRes.body);
     return;
   }
+  sleep(Math.random() * 3);
 
   const accessToken = verifyRes.json().tokens.accessToken;
   const userId = verifyRes.json().user.userId;
@@ -60,14 +62,15 @@ export default function () {
     console.error("Failed to update user:", updateRes.body);
     return;
   }
+  sleep(Math.random() * 5);
 
   // Step 4: Create Space (if not already created)
-
   const spaceRes = createSpace(accessToken);
   if (spaceRes.status !== 200) {
     console.error("Failed to create space:", spaceRes.body);
     return;
   }
+  sleep(Math.random() * 5)
 
   // Step 5: Get Available Apps
   const appsRes = getAvailableApps(accessToken);
@@ -75,36 +78,35 @@ export default function () {
     console.error("Failed to fetch available apps:", appsRes.body);
     return;
   }
+  sleep(Math.random() * 5); 
+
   // Step 6: Update space
   const spaceId = spaceRes.json().id;
+  updateSpace(spaceId, updateSpacePayload(appsRes), accessToken);
+  sleep(Math.random() * 5);
 
-  updateSpace(spaceId, updateSpacePayload(appsRes), accessToken)
-
-
-  // Step 6: Request QR Code
+  // Step 7: Request QR Code
   const qrRes = requestQRCode(accessToken);
   if (qrRes.status !== 200) {
     console.error("Failed to request QR code:", qrRes.body);
     return;
   }
+  sleep(Math.random() * 7);
 
   const deepLink = qrRes.json().deepLink;
-  const token = deepLink.match(/token=([^&]+)/)?.[1];
+  const token = deepLink.match(/token=([^&]+)/)?.[1];  
 
-  if (!childUserId) {
-    childUserId = checkIfChildAlreadyExists(token, accessToken)
-  }
 
   childDeviceDetails = generateDeviceDetails();
-
-  const randomName = generateRandomAlphabeticName()
+  const randomName = generateRandomAlphabeticName();
   const payload = {
     token,
-    userId: childUserId,
-    username: !childUserId ? randomName : undefined,
+    username: randomName ,
     device: childDeviceDetails,
   };
-  verifyUser(payload, accessToken)
+  const response = verifyUser(payload);
+  const childId = response.user.userId
+  const childAccessToken = response.tokens.accessToken
+  updateUser(childAccessToken, childId)
   sleep(1);
 }
-
