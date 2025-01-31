@@ -35,7 +35,7 @@ export default function () {
     console.error("Failed to request OTP:", otpRes.body);
     return;
   }
-  sleep(Math.random() * 3); 
+  sleep(2); 
 
   validPayload = {
     email,
@@ -48,7 +48,7 @@ export default function () {
     console.error("Failed to verify OTP:", verifyRes.body);
     return;
   }
-  sleep(Math.random() * 3);
+  sleep(2); 
 
   const accessToken = verifyRes.json().tokens.accessToken;
   const userId = verifyRes.json().user.userId;
@@ -58,32 +58,32 @@ export default function () {
     console.error("Failed to update user:", updateRes.body);
     return;
   }
-  sleep(Math.random() * 5);
+  sleep(2); 
 
   const spaceRes = createSpace(accessToken);
   if (spaceRes.status !== 200) {
     console.error("Failed to create space:", spaceRes.body);
     return;
   }
-  sleep(Math.random() * 5)
+  sleep(2); 
 
   const appsRes = getAvailableApps(accessToken);
   if (appsRes.status !== 200) {
     console.error("Failed to fetch available apps:", appsRes.body);
     return;
   }
-  sleep(Math.random() * 5); 
+  sleep(2); 
 
   const spaceId = spaceRes.json().id;
   updateSpace(spaceId, updateSpacePayload(appsRes), accessToken);
-  sleep(Math.random() * 5);
+  sleep(2); 
 
   const qrRes = requestQRCode(accessToken);
   if (qrRes.status !== 200) {
     console.error("Failed to request QR code:", qrRes.body);
     return;
   }
-  sleep(Math.random() * 7);
+  sleep(2); 
 
   const deepLink = qrRes.json().deepLink;
   const token = deepLink.match(/token=([^&]+)/)?.[1];  
