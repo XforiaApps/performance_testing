@@ -67,6 +67,8 @@ export function setup() {
 
         // Step 4: Create Space (only if not created)
         const spaceRes = createSpace(accessToken);
+
+        // create 4 landmark space
         
         // Check if spaceRes is valid and has the required properties
         if (!spaceRes || !spaceRes.json() || !spaceRes.json().id) {

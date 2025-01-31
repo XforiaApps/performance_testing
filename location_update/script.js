@@ -68,6 +68,8 @@ export function setup() {
 
         // Step 4: Create Space (only if not created)
         const spaceRes = createSpace(accessToken);
+
+        // add one more room space beacon
         
         // Check if spaceRes is valid and has the required properties
         if (!spaceRes || !spaceRes.json() || !spaceRes.json().id) {
@@ -81,14 +83,6 @@ export function setup() {
         // Step 6: Update space with apps
         const spaceId = spaceRes.json().id;
         updateSpace(spaceId, updateSpacePayload(appsRes), accessToken);
-
-        // Step 7: Request QR Code for Login
-        const qrCodeRes = requestQRCode(accessToken);
-        const deepLink = qrCodeRes.json().deepLink;
-        const token = deepLink.match(/token=([^&]+)/)?.[1];
-
-        // Step 8: Check existing child
-        let childId = checkIfChildAlreadyExists(token, accessToken);
 
         // Step 9: Create child device details if not exists
         childDeviceDetails = generateDeviceDetails();
@@ -107,7 +101,6 @@ export function setup() {
             childUserId,
         };
 
-    // return userInfo;
 }
 
 export default function (userInfo) {

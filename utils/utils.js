@@ -76,12 +76,14 @@ export function generateRandomBeacon() {
   const randomName = `Beacon_${Math.random().toString(36).substring(2, 8)}`;
   const major = Math.floor(Math.random() * 65536);
   const minor = Math.floor(Math.random() * 65536);
+  const beaconType = 'fixed'
 
   return {
     uuid,
     name: randomName,
     major,
     minor,
+    beaconType
   };
 }
 
@@ -101,10 +103,8 @@ export const updatePayload = {
 export function updateSpacePayload(appsRes) {
   return {
     name: generateRandomAlphabeticName(6),
-    type: "landmark",
-    gps,
     apps: appsRes.json().apps,
-    allow: true
+    allow: false
   }
   
 }

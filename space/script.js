@@ -49,14 +49,6 @@ export function setup() {
   }
 
   const accessToken = verifyRes.json().tokens.accessToken;
-  const userId = verifyRes.json().user.userId;
-
-  // Step 3: Update User
-  const updateRes = updateUser(accessToken, userId);
-  if (updateRes.status !== 200) {
-    console.error("Failed to update user:", updateRes.body);
-    return;
-  }
 
   // Step 4: Create Space (if not already created)
 
@@ -84,7 +76,7 @@ export function setup() {
 export default function (userInfo) {
   const { accessToken } =
     userInfo;
-  const spaceRes = createSpace(accessToken);
+  const spaceRes = createSpace(accessToken); // add logic to add room space also 
   if (spaceRes.status !== 200) {
     console.error("Failed to create space:", spaceRes.body);
     return;

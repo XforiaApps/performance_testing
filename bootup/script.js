@@ -1,6 +1,7 @@
 import { sleep } from "k6";
 import {
     generateDeviceDetails,
+    generateRandomAlphabeticName,
     generateRandomEmail,
     updateSpacePayload,
 } from "../utils/utils.js";
@@ -12,32 +13,28 @@ import {
     createSpace,
     getAvailableApps,
     updateSpace,
-    requestQRCode,
-    checkIfChildAlreadyExists,
-    createUserVerifyPayload,
     verifyUser,
+    inviteSupervisor,
+    verifySupervisorEmail,
+    requestQRCode,
 } from "../loadTestHelpers/script.js";
 
 export const options = {
     scenarios: {
-      load: {
-        executor: 'constant-arrival-rate',
-        duration: '5m',
-        rate: 5000,                         // 5000 request
-        timeUnit: '1s',                    // in 60 minutes
-        preAllocatedVUs: 100,               // maximum 100 concurrent requests
-      },
+        load: {
+            executor: 'constant-arrival-rate',
+            duration: '5m',
+            rate: 100,
+            timeUnit: '1s',
+            preAllocatedVUs: 1000,
+        },
     },
-  };
+};
 
-// const user = generateCustomEmails(100)
 export function setup() {
     const email = generateRandomEmail()
-    let childDeviceDetails = null;
-    let payload = {
-        email
-    }
-    // Step 1: Request OTP
+
+    let payload = { email }
     requestOTP(payload);
 
     payload = {
@@ -45,57 +42,63 @@ export function setup() {
         otp: "1234",
         device: generateDeviceDetails()
     }
-    // Step 2: Verify OTP
+
     const verifyRes = verifyOTP(payload);
     const accessToken = verifyRes.json().tokens.accessToken;
     const userId = verifyRes.json().user.userId;
 
-    // Step 3: Update parent name
-    const updateRes = updateUser(accessToken, userId);
-    const parentName = updateRes.json().name;
+    updateUser(accessToken, userId);
 
-    // Step 4: Create Space (only if not created)
-    const spaceRes = createSpace(accessToken);
+    const space1 = createSpace(accessToken, 'landmark');
+    const space2 = createSpace(accessToken, 'room', space1.json().id);
+    const space3 = createSpace(accessToken, 'room', space1.json().id)
 
-    // Check if spaceRes is valid and has the required properties
-    if (!spaceRes || !spaceRes.json() || !spaceRes.json().id) {
-        console.error("Failed to create space or space ID is missing.");
-        return null; // Prevent returning incomplete userInfo
-    }
-
-    // Step 5: Get available apps
     const appsRes = getAvailableApps(accessToken);
 
-    // Step 6: Update space with apps
-    const spaceId = spaceRes.json().id;
-    updateSpace(spaceId, updateSpacePayload(appsRes), accessToken);
+    const spaceId1 = space1.json().id;
+    const spaceId2 = space2.json().id;
+    const spaceId3 = space3.json().id
 
-    // Step 7: Request QR Code for Login
-    const qrCodeRes = requestQRCode(accessToken);
-    const deepLink = qrCodeRes.json().deepLink;
+    updateSpace(spaceId1, updateSpacePayload(appsRes), accessToken);
+    updateSpace(spaceId2, updateSpacePayload(appsRes), accessToken);
+    updateSpace(spaceId3, updateSpacePayload(appsRes), accessToken);
+
+    const qrRes = requestQRCode(accessToken);
+
+    const deepLink = qrRes.json().deepLink;
     const token = deepLink.match(/token=([^&]+)/)?.[1];
 
-    // Step 8: Check existing child
-    let childId = checkIfChildAlreadyExists(token, accessToken);
+    const randomName = generateRandomAlphabeticName();
+    const childDeviceDetails = generateDeviceDetails();
+    payload = {
+        token,
+        username: randomName,
+        device: childDeviceDetails,
+    };
+    verifyUser(payload)
 
-    // Step 9: Create child device details if not exists
-    childDeviceDetails = generateDeviceDetails();
-
-    // Step 10: Create and verify child user
-    const userVerifyPayload = createUserVerifyPayload(token, childId, childDeviceDetails);
-    const userVerifyResponse = verifyUser(userVerifyPayload, accessToken);
-    const childAccessToken = userVerifyResponse.json().tokens.accessToken;
-    const childUserId = userVerifyResponse.json().user.userId;
-
+    // add supervisor adult api
+    const supervisorName = generateRandomAlphabeticName()
+    payload = {
+        email: generateRandomEmail(),
+        name: supervisorName
+    }
+    const supervisorRes = inviteSupervisor(accessToken, payload)
+    const circleId = verifyRes.json().user.circleId
+    const deepLinkSupervisor = supervisorRes.json().deepLink;
+    const tokenSupervisor = deepLinkSupervisor.match(/token=([^&]+)/)?.[1];
+    
+    payload = {
+        circleId,
+        token: tokenSupervisor,
+        name: supervisorName
+    }
+    verifySupervisorEmail(payload)
     return {
         accessToken,
         userId,
-        parentName,
-        childAccessToken,
-        childUserId,
     };
 
-    // return userInfo;
 }
 
 

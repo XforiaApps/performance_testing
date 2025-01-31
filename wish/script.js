@@ -68,7 +68,7 @@ export function setup() {
         const parentName = updateRes.json().name;
 
         // Step 4: Create Space (only if not created)
-        const spaceRes = createSpace(accessToken);
+        const spaceRes = createSpace(accessToken); 
 
         // Step 5: Get available apps
         const appsRes = getAvailableApps(accessToken);
@@ -82,21 +82,15 @@ export function setup() {
         const deepLink = qrCodeRes.json().deepLink;
         const token = deepLink.match(/token=([^&]+)/)?.[1];
 
-        // Step 8: Check existing child
-        let childId = checkIfChildAlreadyExists(token, accessToken);
 
         // Step 10: Create and verify child user
-        const userVerifyPayload = createUserVerifyPayload(token, childId);
+        const userVerifyPayload = createUserVerifyPayload(token);
         const userVerifyResponse = verifyUser(userVerifyPayload, accessToken);
         const childAccessToken = userVerifyResponse.json().tokens.accessToken;
-        const childUserId = userVerifyResponse.json().user.userId;
 
         return {
             accessToken,
-            userId,
-            parentName,
             childAccessToken,
-            childUserId,
         };
     // });
 
@@ -104,8 +98,7 @@ export function setup() {
 }
 
 export default function (userInfo) {
-    // userInfo.forEach(async (userDetails) => {
-        const { accessToken, childAccessToken } = userInfo;
+       const { accessToken, childAccessToken } = userInfo;
       
         const wishPayload = {
           appId: 1,
@@ -113,7 +106,10 @@ export default function (userInfo) {
         
         makeAWish(childAccessToken, wishPayload);  // Ensure async call
 
+        // make a wish for beacon, landmark, supervision
+
         // Proceed only if the wish response does not indicate a pre-existing wish
+            // grand wish for landmark, supervision, beacon
         // if (wishResponse) {
         //   const grantWishPayload = {
         //     duration: 10,
@@ -124,6 +120,8 @@ export default function (userInfo) {
         //   const locationData = locationUpdate(childAccessToken, locationPayload)
         // }
     //   });
+
+
 
     sleep(1);
 }

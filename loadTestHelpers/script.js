@@ -99,13 +99,65 @@ export function updateUser(accessToken, userId) {
   return res;
 }
 
-export function createSpace(accessToken) {
-  const beacon = generateRandomBeacon();
-  const spacePayload = {
-    name: generateRandomAlphabeticName(6),
-    type: "landmark",
-    gps,
-  };
+export function inviteSupervisor(accessToken, payload) {
+  const res = http.post(
+    `${BASE_URL}/user/invite-supervisor`,
+    JSON.stringify(payload),
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  check(res, {
+    "Supervisor Invitation: Contain status 200": (r) => res.status === 200,
+    "Supervisor Invitation: Contains message and deeplink": (r) => {
+      const message = res.message 
+      const deepLink = res.deepLink 
+      return {message, deepLink}
+    },
+  });
+
+  return res
+}
+
+export function verifySupervisorEmail(payload) {
+  const res = http.get(
+    `${BASE_URL}/auth/user/supervisor-verify/${payload.circleId}?token=${payload.token}&nameHash=${payload.name}`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  check(res, {
+    "Supervisor Verify: Contain status 200": (r) => res.status === 200,
+    "Supervisor Verify: Contains message": (r) => res.message === 'Email verified successfully'
+  });
+
+  return res
+}
+
+export function createSpace(accessToken, spaceType='landmark', spaceId = '') {
+  let spacePayload = {}
+  if(spaceType === 'room') {
+    const beacon = generateRandomBeacon();
+    spacePayload = {
+      name: generateRandomAlphabeticName(6),
+      landmarkId: spaceId,
+      beacon,
+      type: "room",
+    };
+  }else {
+    spacePayload = {
+      name: generateRandomAlphabeticName(6),
+      type: "landmark",
+      gps,
+    };
+  } 
 
   const res = http.post(
     `${BASE_URL}/spaces`,
@@ -117,9 +169,6 @@ export function createSpace(accessToken) {
       },
     }
   );
-  // console.log("Response Status ===>", res.status)
-  // console.log("Response ====>", res.body)
-  // Check if the response has a valid body
   if (!res || !res.body) {
     console.error("Space Create: Empty or no response body");
     return null; // Return null or handle the error as needed
@@ -136,7 +185,7 @@ export function createSpace(accessToken) {
   }
 
   // Validate response content
-  const valid = check(res, {
+  check(res, {
     "Space Create: Contains space ID": (r) => jsonResponse.id !== undefined,
     "Space Create: Contains space name": (r) => jsonResponse.name !== null,
     "Space Create: Contains GPS data (optional)": () => {
@@ -156,14 +205,7 @@ export function createSpace(accessToken) {
             beacon.beaconType &&
             beacon.uuid &&
             beacon.major &&
-            beacon.minor &&
-            beacon.meta &&
-            beacon.meta.firmwareVersion &&
-            beacon.meta.manufacturer &&
-            beacon.meta.batteryLevel &&
-            beacon.meta.rssi &&
-            beacon.meta.location &&
-            beacon.meta.tags
+            beacon.minor
           );
         });
       } else if (jsonResponse.type === "landmark") {
@@ -174,11 +216,11 @@ export function createSpace(accessToken) {
     },
   });
 
-  if (!valid) {
-    console.error(
-      `Space Create: Validation failed. Status: ${res.status}, Body: ${res.body}`
-    );
-  }
+  // if (!valid) {
+  //   console.error(
+  //     `Space Create: Validation failed. Status: ${res.status}, Body: ${res.body}`
+  //   );
+  // }
 
   return res;
 }
