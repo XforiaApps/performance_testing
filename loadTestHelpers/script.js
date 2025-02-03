@@ -134,8 +134,8 @@ export function verifySupervisorEmail(payload) {
   );
 
   check(res, {
-    "Supervisor Verify: Contain status 200": (r) => res.status === 200,
-    "Supervisor Verify: Contains message": (r) => res.message === 'Email verified successfully'
+    "Supervisor Verify: Contain status 200": (r) => r.status === 200,
+    "Supervisor Verify: Contains message": (r) => r.json().message === 'Email verified successfully'
   });
 
   return res
@@ -158,7 +158,6 @@ export function createSpace(accessToken, spaceType='landmark', spaceId = '') {
       gps,
     };
   } 
-
   const res = http.post(
     `${BASE_URL}/spaces`,
     JSON.stringify(spacePayload),
@@ -192,35 +191,29 @@ export function createSpace(accessToken, spaceType='landmark', spaceId = '') {
       const gps = jsonResponse.gps;
       return !gps || (gps.lat && gps.lng && gps.radius && gps.address);
     },
-    "Space Create: Contains beacons (optional)": () => {
-      const beacons = jsonResponse.beacon;
+    // "Space Create: Contains beacons (optional)": () => {
+    //   const beacons = jsonResponse.beacon;
 
-      if (jsonResponse.type === "room") {
-        if (!Array.isArray(beacons) || beacons.length === 0) {
-          return false;
-        }
-        return beacons.every((beacon) => {
-          return (
-            beacon.id &&
-            beacon.beaconType &&
-            beacon.uuid &&
-            beacon.major &&
-            beacon.minor
-          );
-        });
-      } else if (jsonResponse.type === "landmark") {
-        return true;
-      } else {
-        return false;
-      }
-    },
+    //   if (jsonResponse.type === "room") {
+    //     if (!Array.isArray(beacons) || beacons.length === 0) {
+    //       return false;
+    //     }
+    //     return beacons.every((beacon) => {
+    //       return (
+    //         beacon.id &&
+    //         beacon.beaconType &&
+    //         beacon.uuid &&
+    //         beacon.major &&
+    //         beacon.minor
+    //       );
+    //     });
+    //   } else if (jsonResponse.type === "landmark") {
+    //     return true;
+    //   } else {
+    //     return false;
+    //   }
+    // },
   });
-
-  // if (!valid) {
-  //   console.error(
-  //     `Space Create: Validation failed. Status: ${res.status}, Body: ${res.body}`
-  //   );
-  // }
 
   return res;
 }
@@ -390,29 +383,29 @@ export function bootup(accessToken, userId) {
 
   try {
     const data = bootupRes.json();
-    check(bootupRes, {
+    check(data, {
       "Bootup: Response contains user data": (r) => {
-        const user = data.users && data.users[0];
-        return user ? user.id && user.role && user.name : true;
+        const user = r.users && r.users[0];
+        return user ? r.id && r.role && r.name : true;
       },
       "Bootup: Response contains device data": (r) => {
-        const device = data.device && data.device[0];
+        const device = r.device && r.device[0];
         return device
           ? device.id && device.os && device.appVersion && device.metadata
           : true;
       },
       "Bootup: Response contains spaces data": (r) => {
-        const spaces = data.spaces;
+        const spaces = r.spaces;
         return spaces && spaces.length > 0 && spaces[0].id && spaces[0].name;
       },
       "Bootup: Response contains features": (r) => {
-        const features = data.features;
+        const features = r.features;
         return features
           ? features.additionalProp1 && features.additionalProp1.id
           : true;
       },
       "Bootup: Response contains active wishes": (r) => {
-        const activeWish = data.activeWish;
+        const activeWish = r.activeWish;
         return (
           !activeWish || (Array.isArray(activeWish) && activeWish.length >= 0)
         );

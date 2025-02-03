@@ -15,22 +15,19 @@ let childDeviceDetails = false
 
 export const options = {
   scenarios: {
-    rampUp: {
+    rampUpTo100k: {
       executor: 'ramping-vus',
-      startVUs: 0,
+      startVUs: 0, // Start with 0 virtual users
       stages: [
-        { duration: '1m', target: 10000 },  // Ramp up to 10,000 VUs in 1 minute
-        { duration: '1m', target: 20000 },  // Ramp up to 20,000 VUs in the next minute
-        { duration: '1m', target: 30000 },  // Ramp up to 30,000 VUs in the next minute
-        { duration: '1m', target: 40000 },  // Ramp up to 40,000 VUs in the next minute
-        { duration: '1m', target: 50000 },  // Ramp up to 50,000 VUs in the next minute
+        { duration: '5m', target: 100000 }, // Ramp up to 100,000 VUs over 5 minutes
+        { duration: '5m', target: 100000 }, // Stay at 100,000 VUs for the next 5 minutes
       ],
     },
   },
 };
 
 
-export default function () {
+export default function() {
   const email = generateRandomEmail();
   let validPayload = { email };
 
@@ -39,7 +36,7 @@ export default function () {
     console.error("Failed to request OTP:", otpRes.body);
     return;
   }
-  // sleep(2); 
+  sleep(2); 
 
   validPayload = {
     email,
@@ -52,7 +49,7 @@ export default function () {
     console.error("Failed to verify OTP:", verifyRes.body);
     return;
   }
-  // sleep(2); 
+  sleep(3); 
 
   const accessToken = verifyRes.json().tokens.accessToken;
   const userId = verifyRes.json().user.userId;
@@ -62,32 +59,32 @@ export default function () {
     console.error("Failed to update user:", updateRes.body);
     return;
   }
-  // sleep(2); 
+  sleep(3); 
 
   const spaceRes = createSpace(accessToken);
   if (spaceRes.status !== 200) {
     console.error("Failed to create space:", spaceRes.body);
     return;
   }
-  // sleep(2); 
+  sleep(3); 
 
   const appsRes = getAvailableApps(accessToken);
   if (appsRes.status !== 200) {
     console.error("Failed to fetch available apps:", appsRes.body);
     return;
   }
-  // sleep(2); 
+  sleep(3); 
 
   const spaceId = spaceRes.json().id;
   updateSpace(spaceId, updateSpacePayload(appsRes), accessToken);
-  // sleep(2); 
+  sleep(3); 
 
   const qrRes = requestQRCode(accessToken);
   if (qrRes.status !== 200) {
     console.error("Failed to request QR code:", qrRes.body);
     return;
   }
-  // sleep(2); 
+  sleep(3); 
 
   const deepLink = qrRes.json().deepLink;
   const token = deepLink.match(/token=([^&]+)/)?.[1];  

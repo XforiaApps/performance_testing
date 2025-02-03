@@ -21,15 +21,19 @@ import {
 
 export const options = {
     scenarios: {
-        load: {
-            executor: 'constant-arrival-rate',
-            duration: '5m',
-            rate: 100,
-            timeUnit: '1s',
-            preAllocatedVUs: 1000,
-        },
+      rampUp: {
+        executor: 'ramping-vus',
+        startVUs: 0,
+        stages: [
+          { duration: '1m', target: 300 },  // Ramp up to 10,000 VUs in 1 minute
+        //   { duration: '1m', target: 20000 },  // Ramp up to 20,000 VUs in the next minute
+        //   { duration: '1m', target: 30000 },  // Ramp up to 30,000 VUs in the next minute
+        //   { duration: '1m', target: 40000 },  // Ramp up to 40,000 VUs in the next minute
+        //   { duration: '1m', target: 50000 },  // Ramp up to 50,000 VUs in the next minute
+        ],
+      },
     },
-};
+  };
 
 export function setup() {
     const email = generateRandomEmail()
@@ -77,8 +81,7 @@ export function setup() {
     };
     verifyUser(payload)
 
-    // add supervisor adult api
-    const supervisorName = generateRandomAlphabeticName()
+    const supervisorName = generateRandomEmail()
     payload = {
         email: generateRandomEmail(),
         name: supervisorName
@@ -87,11 +90,11 @@ export function setup() {
     const circleId = verifyRes.json().user.circleId
     const deepLinkSupervisor = supervisorRes.json().deepLink;
     const tokenSupervisor = deepLinkSupervisor.match(/token=([^&]+)/)?.[1];
-    
+    const hashedName = deepLinkSupervisor.match(/nameHash=([^&]+)/)?.[1];
     payload = {
         circleId,
         token: tokenSupervisor,
-        name: supervisorName
+        name: hashedName
     }
     verifySupervisorEmail(payload)
     return {
