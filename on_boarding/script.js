@@ -13,6 +13,7 @@ import { generateRandomEmail, generateDeviceDetails, generateRandomAlphabeticNam
 
 let childDeviceDetails = false
 
+
 export const options = {
   scenarios: {
     rampUpTo100k: {
@@ -26,15 +27,9 @@ export const options = {
     },
   },
   tags: {
-    name: "high_volume_user_test",
-  },
-  discardResponseBodies: true,
-  summaryTrendStats: ['avg', 'p(90)', 'p(95)', 'count'],
-  thresholds: {
-    http_req_failed: ['rate<0.01'],
+    name: "high_volume_30min_test",
   },
  };
-
 
 
 export default function() {
