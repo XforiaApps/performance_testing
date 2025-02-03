@@ -15,20 +15,25 @@ let childDeviceDetails = false
 
 export const options = {
   scenarios: {
-    rampUpTo50k: {
+    rampUpTo100k: {
       executor: 'ramping-vus',
-      startVUs: 0, // Start with 0 virtual users
+      startVUs: 0,
       stages: [
-        { duration: '5m', target: 25000 }, // Ramp up to 25,000 VUs in 5 minutes
-        { duration: '5m', target: 50000 }, // Continue ramping up to 50,000 VUs over the next 5 minutes
-        { duration: '10m', target: 50000 }, // Hold at 50,000 VUs for 10 minutes
+        { duration: '10m', target: 50000 },
+        { duration: '10m', target: 100000 },
+        { duration: '10m', target: 100000 },
       ],
     },
   },
   tags: {
-    name: "load_test", // Use a static name instead of dynamic high-cardinality values
+    name: "high_volume_user_test",
   },
-};
+  discardResponseBodies: true,
+  summaryTrendStats: ['avg', 'p(90)', 'p(95)', 'count'],
+  thresholds: {
+    http_req_failed: ['rate<0.01'],
+  },
+ };
 
 
 
