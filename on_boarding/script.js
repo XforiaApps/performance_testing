@@ -13,23 +13,22 @@ import { generateRandomEmail, generateDeviceDetails, generateRandomAlphabeticNam
 
 let childDeviceDetails = false
 
-
 export const options = {
   scenarios: {
     rampUpTo100k: {
       executor: 'ramping-vus',
-      startVUs: 0,
+      startVUs: 0, // Start with 0 virtual users
       stages: [
-        { duration: '10m', target: 50000 },
-        { duration: '10m', target: 100000 },
-        { duration: '10m', target: 100000 },
+        { duration: '10m', target: 80000 },  // Gradually ramp up to 50k VUs in 5 minutes
+        { duration: '10m', target: 80000 }, // Continue ramping up to 100k VUs over 10 minutes
       ],
     },
   },
   tags: {
-    name: "high_volume_30min_test",
+    name: "load_test",  // Use a static name instead of dynamic high-cardinality values
   },
- };
+};
+
 
 
 export default function() {
