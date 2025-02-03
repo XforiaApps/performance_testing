@@ -15,7 +15,7 @@ export function requestOTP(payload) {
     JSON.stringify(payload),
     { headers: { "Content-Type": "application/json" } }
   );
-
+  
   check(res, {
     "Valid Email: OTP request successful (200)": (r) => r.status === 200,
     "Valid Email: Response contains success message": (r) =>
