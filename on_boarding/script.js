@@ -97,6 +97,7 @@ export default function() {
     username: randomName ,
     device: childDeviceDetails,
   };
+  sleep(3)
   const response = verifyUser(payload);
   const childId = response.user.userId
   const childAccessToken = response.tokens.accessToken
