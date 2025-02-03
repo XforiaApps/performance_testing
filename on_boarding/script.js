@@ -19,12 +19,8 @@ export const options = {
       executor: 'ramping-vus',
       startVUs: 0, // Start with 0 virtual users
       stages: [
-        { duration: '2m', target: 10000 }, // Ramp up to 10k VUs in 2 minutes
-        { duration: '2m', target: 20000 }, // Ramp up to 20k VUs in 2 minutes
-        { duration: '2m', target: 30000 }, // Ramp up to 30k VUs in 2 minutes
-        { duration: '2m', target: 40000 }, // Ramp up to 40k VUs in 2 minutes
-        { duration: '2m', target: 50000 }, // Ramp up to 50k VUs in 2 minutes
-        { duration: '2m', target: 60000 }, // Ramp up to 60k VUs in 2 minutes
+        { duration: '5m', target: 50000 }, // Ramp up to 10k VUs in 2 minutes
+        { duration: '5m', target: 50000 }, // Ramp up to 20k VUs in 2 minutes
       ],
     },
   },
