@@ -110,16 +110,15 @@ export default function (userInfo) {
 
         // Proceed only if the wish response does not indicate a pre-existing wish
             // grand wish for landmark, supervision, beacon
-        // if (wishResponse) {
-        //   const grantWishPayload = {
-        //     duration: 10,
-        //     isGranted: true,
-        //     isSupervisor: true,
-        //   };
-        //   grantWish(wishResponse.id, grantWishPayload, accessToken);
-        //   const locationData = locationUpdate(childAccessToken, locationPayload)
-        // }
-    //   });
+        if (wishResponse) {
+          const grantWishPayload = {
+            duration: 10,
+            isGranted: true,
+            isSupervisor: true,
+          };
+          grantWish(wishResponse.id, grantWishPayload, accessToken);
+          const locationData = locationUpdate(childAccessToken, locationPayload)
+        }
 
 
 

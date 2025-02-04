@@ -19,6 +19,8 @@ import {
     verifyUser,
     getWishHistory,
     getCirlceHistory,
+    makeAWish,
+    grantWish,
 } from "../loadTestHelpers/script.js";
 
 export const options = {
@@ -26,9 +28,9 @@ export const options = {
     scenarios: {
         steadyLoad: {
             executor: "constant-arrival-rate",
-            rate: 417, // ~417 users per second to reach 3,000,000 users in 2 hours
+            rate: 7000, // ~417 users per second to reach 3,000,000 users in 2 hours
             timeUnit: "1s", // New users arrive every second
-            duration: "2h", // Test duration of 2 hours
+            duration: "5m", // Test duration of 2 hours
             preAllocatedVUs: 3000, // Pre-allocate enough VUs to handle the load
             maxVUs: 5000, // Allow up to 5000 VUs for peak concurrency
         },
@@ -45,66 +47,113 @@ export const options = {
 export function setup() {
     const email = generateRandomEmail()
     let childDeviceDetails = null;
-        let payload = {
-            email
-        }
-        // Step 1: Request OTP
-        requestOTP(payload);
+    let payload = {
+        email
+    }
+    // Step 1: Request OTP
+    requestOTP(payload);
 
-        payload = {
-            email,
-            otp: "1234",
-            device: generateDeviceDetails()
-        }
-        // Step 2: Verify OTP
-        const verifyRes = verifyOTP(payload);
-        const accessToken = verifyRes.json().tokens.accessToken;
-        const userId = verifyRes.json().user.userId;
+    payload = {
+        email,
+        otp: "1234",
+        device: generateDeviceDetails()
+    }
+    // Step 2: Verify OTP
+    const verifyRes = verifyOTP(payload);
+    const accessToken = verifyRes.json().tokens.accessToken;
+    const userId = verifyRes.json().user.userId;
 
-        // Step 3: Update parent name
-        const updateRes = updateUser(accessToken, userId);
-        const parentName = updateRes.json().name;
+    // Step 3: Update parent name
+    const updateRes = updateUser(accessToken, userId);
+    const parentName = updateRes.json().name;
 
-        // Step 4: Create Space (only if not created)
-        const spaceRes = createSpace(accessToken);
-        
-        // Check if spaceRes is valid and has the required properties
-        if (!spaceRes || !spaceRes.json() || !spaceRes.json().id) {
-            console.error("Failed to create space or space ID is missing.");
-            return null; // Prevent returning incomplete userInfo
-        }
+    // Step 4: Create Space (only if not created)
+    const spaceRes = createSpace(accessToken);
 
-        // Step 5: Get available apps
-        const appsRes = getAvailableApps(accessToken);
+    // Check if spaceRes is valid and has the required properties
+    if (!spaceRes || !spaceRes.json() || !spaceRes.json().id) {
+        console.error("Failed to create space or space ID is missing.");
+        return null; // Prevent returning incomplete userInfo
+    }
 
-        // Step 6: Update space with apps
-        const spaceId = spaceRes.json().id;
-        updateSpace(spaceId, updateSpacePayload(appsRes), accessToken);
+    // Step 5: Get available apps
+    const appsRes = getAvailableApps(accessToken);
 
-        // Step 7: Request QR Code for Login
-        const qrCodeRes = requestQRCode(accessToken);
-        const deepLink = qrCodeRes.json().deepLink;
-        const token = deepLink.match(/token=([^&]+)/)?.[1];
+    // Step 6: Update space with apps
+    const spaceId = spaceRes.json().id;
+    updateSpace(spaceId, updateSpacePayload(appsRes), accessToken);
 
-        // Step 8: Check existing child
-        let childId = checkIfChildAlreadyExists(token, accessToken);
+    // Step 7: Request QR Code for Login
+    const qrCodeRes = requestQRCode(accessToken);
+    const deepLink = qrCodeRes.json().deepLink;
+    const token = deepLink.match(/token=([^&]+)/)?.[1];
 
-        // Step 9: Create child device details if not exists
-        childDeviceDetails = generateDeviceDetails();
+    // Step 8: Check existing child
+    let childId = checkIfChildAlreadyExists(token, accessToken);
 
-        // Step 10: Create and verify child user
-        const userVerifyPayload = createUserVerifyPayload(token, childId, childDeviceDetails);
-        const userVerifyResponse = verifyUser(userVerifyPayload, accessToken);
-        const childAccessToken = userVerifyResponse.json().tokens.accessToken;
-        const childUserId = userVerifyResponse.json().user.userId;
+    // Step 9: Create child device details if not exists
+    childDeviceDetails = generateDeviceDetails();
 
-        return {
-            accessToken,
-            userId,
-            parentName,
-            childAccessToken,
-            childUserId,
-        };
+    // Step 10: Create and verify child user
+    const randomName = generateRandomAlphabeticName();
+    childDeviceDetails = generateDeviceDetails();
+    payload = {
+        token,
+        username: randomName,
+        device: childDeviceDetails,
+    };
+    const userVerifyResponse = verifyUser(payload);
+    const childAccessToken = userVerifyResponse.tokens.accessToken;
+    const childUserId = userVerifyResponse.user.userId;
+
+    const wishPayload = {
+        appId: 1,
+    };
+
+    const wishResponse1 = makeAWish(childAccessToken, wishPayload);
+    if (wishResponse1) {
+        grantWish(wishResponse1.id, {
+            duration: 10,
+            isGranted: true,
+            isSupervisor: true,
+        }, accessToken);
+    }
+
+    const wishResponse2 = makeAWish(childAccessToken, wishPayload);
+    if (wishResponse2) {
+        grantWish(wishResponse2.id, {
+            duration: 10,
+            isGranted: false,
+            isSupervisor: true,
+        }, accessToken);
+    }
+
+    const wishResponse3 = makeAWish(childAccessToken, wishPayload);
+    if (wishResponse3) {
+        grantWish(wishResponse3.id, {
+            duration: 10,
+            isGranted: true,
+            isSupervisor: false,
+        }, accessToken);
+    }
+
+    const wishResponse4 = makeAWish(childAccessToken, wishPayload);
+    if (wishResponse4) {
+        grantWish(wishResponse4.id, {
+            duration: 10,
+            isGranted: false,
+            isSupervisor: true,
+        }, accessToken);
+    }
+
+
+    return {
+        accessToken,
+        userId,
+        parentName,
+        childAccessToken,
+        childUserId,
+    };
 
     // return userInfo;
 }
@@ -113,8 +162,8 @@ export default function (userInfo) {
     const params = { limit: 100, offset: 0 };
 
     // userInfo.forEach((userDetails) => {
-        getWishHistory(userInfo, params);
-        // getCirlceHistory(userInfo, params);
+    getWishHistory(userInfo, params);
+    // getCirlceHistory(userInfo, params);
     // });
 
     sleep(1);
