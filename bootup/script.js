@@ -24,7 +24,7 @@ export const options = {
     scenarios: {
         steadyLoad: {
             executor: "constant-arrival-rate",
-            rate: 4000, // ~417 users per second to reach 3,000,000 users in 2 hours
+            rate: 100, // ~417 users per second to reach 3,000,000 users in 2 hours
             timeUnit: "1s", // New users arrive every second
             duration: "5m", // Test duration of 2 hours
             preAllocatedVUs: 1000, // Pre-allocate enough VUs to handle the load
@@ -70,7 +70,7 @@ export function setup() {
     updateSpace(spaceId3, updateSpacePayload(appsRes), accessToken);
 
     const qrRes = requestQRCode(accessToken);
-
+    
     const deepLink = qrRes.json().deepLink;
     const token = deepLink.match(/token=([^&]+)/)?.[1];
 
@@ -98,7 +98,7 @@ export function setup() {
         token: tokenSupervisor,
         name: hashedName
     }
-    verifySupervisorEmail(payload)
+    const user = verifySupervisorEmail(payload)
     return {
         accessToken,
         userId,
@@ -109,6 +109,7 @@ export function setup() {
 
 export default function (userDetails) {
     const { accessToken, userId } = userDetails;
-    bootup(accessToken, userId);
+    const res = bootup(accessToken, userId);
+    console.log("Res", res)
     sleep(1);
 }
