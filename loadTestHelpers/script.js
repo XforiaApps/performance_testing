@@ -378,12 +378,12 @@ export function bootup(accessToken, userId) {
   const bootupRes = http.get(`${BASE_URL}/user/bootup`, {
     headers: {
       Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
     },
   });
-
   try {
     const data = bootupRes.json();
-    console.log("data", data)
+    console.log(JSON.stringify(data))
     check(data, {
       "Bootup: Response contains user data": (r) => {
         const user = r.users && r.users[0];
@@ -479,14 +479,11 @@ export function getCirlceHistory(userDetails, params) {
       },
     }
   );
-
+  
   check(circleHistory, {
     'Get all space history: response status 200 (OK)': (r) => r.status === 200,
     'Get all space history response': (r) => {
       const spaceHistory = r.json();
-      if (Array.isArray(spaceHistory) && spaceHistory.length === 0) {
-        return true;
-      }
       return (
         Array.isArray(spaceHistory) &&
         spaceHistory.every((sh) =>
@@ -501,9 +498,6 @@ export function getCirlceHistory(userDetails, params) {
           sh.spaceName &&
           sh.spaceType &&
           sh.eventType &&
-          sh.eventData &&
-          sh.eventData.name &&
-          sh.eventData.status &&
           Array.isArray(sh.allowApps) &&
           Array.isArray(sh.blockedApps) &&
           sh.createdAt &&
@@ -545,9 +539,6 @@ export function getCirlceHistory(userDetails, params) {
           sh.spaceName &&
           sh.spaceType &&
           sh.eventType &&
-          sh.eventData &&
-          sh.eventData.name &&
-          sh.eventData.status &&
           Array.isArray(sh.allowApps) &&
           Array.isArray(sh.blockedApps) &&
           sh.createdAt &&

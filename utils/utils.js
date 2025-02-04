@@ -109,22 +109,16 @@ export function updateSpacePayload(appsRes) {
   
 }
 
-const generatedCoordinates = new Set();
 
 const getRandomLatLng = () => {
-  let lat, lng;
-
-  do {
-    lat = (Math.random() * (90 - (-90)) + (-90)).toFixed(4); // Latitude between -90 and 90
-    lng = (Math.random() * (180 - (-180)) + (-180)).toFixed(4); // Longitude between -180 and 180
-  } while (generatedCoordinates.has(`${lat},${lng}`));
-
-  generatedCoordinates.add(`${lat},${lng}`);
-
-  return {
-    lat: parseFloat(lat),
-    lng: parseFloat(lng),
-  };
+ // Latitude ranges from -90 to 90
+ const lat = Math.random() * 180 - 90;
+    
+ // Longitude ranges from -180 to 180
+ const lng = Math.random() * 360 - 180;
+ 
+ // Return the latitude and longitude as an object
+ return { lat, lng };
 };
 
 export const gps = {
@@ -200,11 +194,13 @@ export const grantWishPayload = {
   isSupervisor: true,
 };
 
-export const locationPayload = {
-  spaceId: "",
-  eventType: "",
-  lastZonesSyncedTime: "",
-};
+export const getLocationPayload = (spaceId, eventType) => {
+  return {
+    spaceId,
+    eventType,
+    lastZonesSyncedTime: new Date(),
+  }
+}
 
 export const updateDevicePayload = {
   os: "ios",
