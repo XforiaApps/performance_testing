@@ -14,9 +14,9 @@ export const options = {
     scenarios: {
         steadyLoad: {
             executor: "constant-arrival-rate",
-            rate: 417, // ~417 users per second to reach 3,000,000 users in 2 hours
+            rate: 7000, // ~417 users per second to reach 3,000,000 users in 2 hours
             timeUnit: "1s", // New users arrive every second
-            duration: "2h", // Test duration of 2 hours
+            duration: "5m", // Test duration of 2 hours
             preAllocatedVUs: 3000, // Pre-allocate enough VUs to handle the load
             maxVUs: 5000, // Allow up to 5000 VUs for peak concurrency
         },
@@ -62,7 +62,7 @@ export function setup() {
 export default function (userInfo) {
     // userInfo.forEach((user) => {
         const { accessToken } = userInfo;
-        const params = { search: '', limit: 5, offset: 0 };
+        const params = { search: '', limit: 20, offset: 0 };
         getAvailableApps(accessToken, params);
     // });
 
