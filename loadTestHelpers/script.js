@@ -440,25 +440,44 @@ export function getWishHistory(userDetails, params) {
       const wishes = r.json();
       return wishes.every((wish) => {
         return (
-          wish.id &&
-          wish.wishId &&
-          wish.appId &&
-          wish.userId &&
-          wish.appName &&
-          wish.deviceInfo &&
-          wish.deviceInfo.deviceId &&
-          wish.deviceInfo.deviceName &&
-          wish.deviceInfo.os &&
-          wish.deviceInfo.osVersion &&
-          wish.deviceInfo.model &&
-          wish.username &&
-          wish.circleId &&
-          typeof wish.isGranted === 'boolean' &&
-          wish.status &&
-          wish.createdAt &&
-          wish.updatedAt &&
-          (wish.duration === null || typeof wish.duration === 'number') &&
-          (!wish.expiredAt || typeof wish.expiredAt === 'string')
+           // Non-optional required fields
+        !!wish.id,
+        !!wish.wishId,
+        !!wish.appId,
+        !!wish.userId,
+        !!wish.appName,
+        !!wish.circleId,
+        !!wish.status,
+        !!wish.createdAt,
+        !!wish.updatedAt,
+        typeof wish.isGranted === 'boolean',
+
+        // Optional fields - different validation approach
+        wish.deviceInfo === undefined || (
+          wish.deviceInfo.deviceId !== undefined &&
+          wish.deviceInfo.deviceName !== undefined &&
+          wish.deviceInfo.os !== undefined &&
+          wish.deviceInfo.osVersion !== undefined &&
+          wish.deviceInfo.model !== undefined
+        ),
+
+        wish.studentId === undefined || wish.studentId !== null,
+        
+        wish.spaces === undefined || 
+        wish.spaces === null || 
+        (Array.isArray(wish.spaces) && 
+          (wish.spaces.length === 0 || 
+            wish.spaces.every(space => 
+              typeof space === 'string' || 
+              (typeof space === 'object' && 
+                space.id !== undefined && 
+                space.name !== undefined)
+            )
+          )
+        ),
+
+        (wish.duration === null || typeof wish.duration === 'number'),
+        (!wish.expiredAt || typeof wish.expiredAt === 'string')
         );
       });
     },
