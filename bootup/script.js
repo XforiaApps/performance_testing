@@ -20,21 +20,23 @@ import {
 } from "../loadTestHelpers/script.js";
 
 export const options = {
+    setupTimeout: '10m', // Allow setup to run for up to 10 minutes
     scenarios: {
-      rampUp: {
-        executor: 'ramping-vus',
-        startVUs: 0,
-        stages: [
-          { duration: '1m', target: 300 },  // Ramp up to 10,000 VUs in 1 minute
-        //   { duration: '1m', target: 20000 },  // Ramp up to 20,000 VUs in the next minute
-        //   { duration: '1m', target: 30000 },  // Ramp up to 30,000 VUs in the next minute
-        //   { duration: '1m', target: 40000 },  // Ramp up to 40,000 VUs in the next minute
-        //   { duration: '1m', target: 50000 },  // Ramp up to 50,000 VUs in the next minute
-        ],
-      },
+        steadyLoad: {
+            executor: "constant-arrival-rate",
+            rate: 4000, // ~417 users per second to reach 3,000,000 users in 2 hours
+            timeUnit: "1s", // New users arrive every second
+            duration: "5m", // Test duration of 2 hours
+            preAllocatedVUs: 1000, // Pre-allocate enough VUs to handle the load
+            maxVUs: 2000, // Allow up to 5000 VUs for peak concurrency
+        },
     },
-  };
-
+    ext: {
+        loadimpact: {
+            name: "5000 request per second",
+        },
+    },
+};
 export function setup() {
     const email = generateRandomEmail()
 

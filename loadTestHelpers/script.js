@@ -383,6 +383,7 @@ export function bootup(accessToken, userId) {
 
   try {
     const data = bootupRes.json();
+    console.log("data", data)
     check(data, {
       "Bootup: Response contains user data": (r) => {
         const user = r.users && r.users[0];
