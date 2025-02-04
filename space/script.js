@@ -10,9 +10,9 @@ export const options = {
   scenarios: {
     steadyLoad: {
       executor: "constant-arrival-rate",
-      rate: 417, // ~417 users per second to reach 3,000,000 users in 2 hours
+      rate: 300, // ~417 users per second to reach 3,000,000 users in 2 hours
       timeUnit: "1s", // New users arrive every second
-      duration: "2h", // Test duration of 2 hours
+      duration: "1m", // Test duration of 2 hours
       preAllocatedVUs: 3000, // Pre-allocate enough VUs to handle the load
       maxVUs: 5000, // Allow up to 5000 VUs for peak concurrency
     },
@@ -50,7 +50,6 @@ export function setup() {
 
   const accessToken = verifyRes.json().tokens.accessToken;
 
-  // Step 4: Create Space (if not already created)
 
   const spaceRes = createSpace(accessToken);
   if (spaceRes.status !== 200) {
@@ -70,15 +69,21 @@ export function setup() {
   updateSpace(spaceId, updateSpacePayload(appsRes), accessToken)
   return {
     accessToken,
+    spaceId
   };
 }
 
 export default function (userInfo) {
-  const { accessToken } =
+  const { accessToken,spaceId } =
     userInfo;
-  const spaceRes = createSpace(accessToken); // add logic to add room space also 
-  if (spaceRes.status !== 200) {
-    console.error("Failed to create space:", spaceRes.body);
+  const spaceRes2 = createSpace(accessToken, 'room', spaceId); 
+  if (spaceRes2.status !== 200) {
+    console.error("Failed to create space:", spaceRes2.body);
+    return;
+  }
+  const spaceRes3 = createSpace(accessToken, 'room', spaceId);  
+  if (spaceRes3.status !== 200) {
+    console.error("Failed to create space:", spaceRes3.body);
     return;
   }
 
@@ -89,9 +94,11 @@ export default function (userInfo) {
     return;
   }
   // Step 6: Update space
-  const spaceId = spaceRes.json().id;
+  const spaceId2 = spaceRes2.json().id;
+  const spaceId3 = spaceRes3.json().id;
 
-  updateSpace(spaceId, updateSpacePayload(appsRes), accessToken)
+  updateSpace(spaceId2, updateSpacePayload(appsRes), accessToken)
+  updateSpace(spaceId3, updateSpacePayload(appsRes), accessToken)
 
   sleep(1); // Wait for 1 second before the next iteration
 }

@@ -266,6 +266,7 @@ export function updateSpace(spaceId, updateSpacePayload, accessToken) {
       },
     }
   );
+
   check(res, {
     "Space Update: Apps added successfully (200)": (r) => r.status === 200,
     "Space Update: Response contains updated space data": (r) => {
@@ -383,7 +384,6 @@ export function bootup(accessToken, userId) {
   });
   try {
     const data = bootupRes.json();
-    console.log(JSON.stringify(data))
     check(data, {
       "Bootup: Response contains user data": (r) => {
         const user = r.users && r.users[0];
