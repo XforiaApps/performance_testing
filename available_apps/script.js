@@ -29,42 +29,35 @@ export const options = {
 };
 
 export function setup() {
-    // const users = generateCustomEmails(2);
-    // const userInfo = users.map((user) => {
-        const email = generateRandomEmail()
-        let validPayload = { email }
-        // Step 1: Request OTP
-        const otpRes = requestOTP(validPayload);
-        if (otpRes.status !== 200) {
-            console.error("Failed to request OTP:", otpRes.body);
-            return;
-        }
-        validPayload = {
-            email,
-            otp: "1234",
-            device: generateDeviceDetails()
-        }
-        // Step 2: Verify OTP
-        const verifyRes = verifyOTP(validPayload);
-        if (verifyRes.status !== 200) {
-            console.error("Failed to verify OTP:", verifyRes.body);
-            return;
-        }
+    const email = generateRandomEmail()
+    let validPayload = { email }
+    // Step 1: Request OTP
+    const otpRes = requestOTP(validPayload);
+    if (otpRes.status !== 200) {
+        console.error("Failed to request OTP:", otpRes.body);
+        return;
+    }
+    validPayload = {
+        email,
+        otp: "1234",
+        device: generateDeviceDetails()
+    }
+    // Step 2: Verify OTP
+    const verifyRes = verifyOTP(validPayload);
+    if (verifyRes.status !== 200) {
+        console.error("Failed to verify OTP:", verifyRes.body);
+        return;
+    }
+    const accessToken = verifyRes.json().tokens.accessToken;
 
-        const accessToken = verifyRes.json().tokens.accessToken;
-        verifyRes.json().user.userId;
+    return { accessToken }
 
-        return {accessToken}
-    // })
-    // return userInfo
 }
 
 export default function (userInfo) {
-    // userInfo.forEach((user) => {
-        const { accessToken } = userInfo;
-        const params = { search: '', limit: 20, offset: 0 };
-        getAvailableApps(accessToken, params);
-    // });
+    const { accessToken } = userInfo;
+    const params = { search: '', limit: 20, offset: 0 };
+    getAvailableApps(accessToken, params);
 
     sleep(1);
 }

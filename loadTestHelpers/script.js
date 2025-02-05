@@ -615,6 +615,7 @@ export function makeAWish(childToken, wishPayload) {
     }
   });
   const responseJson = wishResponse.json();
+  console.log("responseJson", responseJson)
   // Check if the message indicates that the wish request already exists or is expired
   if (responseJson.hasOwnProperty("message")) {
     return null;
