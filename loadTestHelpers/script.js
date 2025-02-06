@@ -220,7 +220,7 @@ export function createSpace(accessToken, spaceType='landmark', spaceId = '') {
 
 
 export function getAvailableApps(accessToken) {
-  const params = { search: "", limit: 3, offset: 0 };
+  const params = { search: "", limit: 30, offset: 0 };
   const res = http.get(
     `${BASE_URL}/available-apps`,
     {
