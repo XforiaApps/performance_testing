@@ -1,4 +1,3 @@
-
 import { sleep } from "k6";
 import {
   generateDeviceDetails, generateRandomEmail, updateSpacePayload
@@ -74,18 +73,27 @@ export function setup() {
 }
 
 export default function (userInfo) {
-  const { accessToken,spaceId } =
-    userInfo;
+  const { accessToken, spaceId } = userInfo;
+
+  // Create first space
   const spaceRes2 = createSpace(accessToken, 'room', spaceId); 
   if (spaceRes2.status !== 200) {
     console.error("Failed to create space:", spaceRes2.body);
     return;
   }
+
+  // Add delay after creating the first space
+  sleep(2); // Wait for 2 seconds
+
+  // Create second space
   const spaceRes3 = createSpace(accessToken, 'room', spaceId);  
   if (spaceRes3.status !== 200) {
     console.error("Failed to create space:", spaceRes3.body);
     return;
   }
+
+  // Add delay after creating the second space
+  sleep(2); // Wait for 2 seconds
 
   // Step 5: Get Available Apps
   const appsRes = getAvailableApps(accessToken);
@@ -93,12 +101,19 @@ export default function (userInfo) {
     console.error("Failed to fetch available apps:", appsRes.body);
     return;
   }
-  // Step 6: Update space
+
+  // Step 6: Update spaces
   const spaceId2 = spaceRes2.json().id;
   const spaceId3 = spaceRes3.json().id;
 
-  updateSpace(spaceId2, updateSpacePayload(appsRes), accessToken)
-  updateSpace(spaceId3, updateSpacePayload(appsRes), accessToken)
+  // Update first space
+  updateSpace(spaceId2, updateSpacePayload(appsRes), accessToken);
+
+  // Add delay after updating the first space
+  sleep(2); // Wait for 2 seconds
+
+  // Update second space
+  updateSpace(spaceId3, updateSpacePayload(appsRes), accessToken);
 
   sleep(1); // Wait for 1 second before the next iteration
 }
