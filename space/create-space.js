@@ -92,7 +92,7 @@ export default function (userInfo) {
   }
 
   // Add delay after creating the first space
-  // sleep(10); // Wait for 2 seconds
+  sleep(10); // Wait for 2 seconds
 
   // Create second space
   const spaceRes3 = createSpace(accessToken, 'room', spaceId);  
