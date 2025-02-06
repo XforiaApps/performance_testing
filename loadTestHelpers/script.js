@@ -266,7 +266,7 @@ export function updateSpace(spaceId, updateSpacePayload, accessToken) {
       },
     }
   );
-
+  
   check(res, {
     "Space Update: Apps added successfully (200)": (r) => r.status === 200,
     "Space Update: Response contains updated space data": (r) => {

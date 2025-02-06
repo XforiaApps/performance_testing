@@ -66,6 +66,7 @@ export function setup() {
   const spaceId = spaceRes.json().id;
 
   updateSpace(spaceId, updateSpacePayload(appsRes), accessToken)
+  console.log(accessToken, spaceId)
   return {
     accessToken,
     spaceId
@@ -83,7 +84,7 @@ export default function (userInfo) {
   }
 
   // Add delay after creating the first space
-  sleep(2); // Wait for 2 seconds
+  sleep(10); // Wait for 2 seconds
 
   // Create second space
   const spaceRes3 = createSpace(accessToken, 'room', spaceId);  
@@ -93,7 +94,7 @@ export default function (userInfo) {
   }
 
   // Add delay after creating the second space
-  sleep(6); // Wait for 2 seconds
+  sleep(10); // Wait for 2 seconds
 
   // Step 5: Get Available Apps
   const appsRes = getAvailableApps(accessToken);
@@ -110,7 +111,7 @@ export default function (userInfo) {
   updateSpace(spaceId2, updateSpacePayload(appsRes), accessToken);
 
   // Add delay after updating the first space
-  sleep(6); // Wait for 2 seconds
+  sleep(10); // Wait for 2 seconds
 
   // Update second space
   updateSpace(spaceId3, updateSpacePayload(appsRes), accessToken);
