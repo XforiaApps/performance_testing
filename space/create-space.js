@@ -11,7 +11,7 @@ export const options = {
       executor: "constant-arrival-rate",
       rate: 7000, // ~417 users per second to reach 3,000,000 users in 2 hours
       timeUnit: "1s", // New users arrive every second
-      duration: "5m", // Test duration of 2 hours
+      duration: "1m", // Test duration of 2 hours
       preAllocatedVUs: 3000, // Pre-allocate enough VUs to handle the load
       maxVUs: 5000, // Allow up to 5000 VUs for peak concurrency
     },
@@ -75,24 +75,15 @@ export function setup() {
 export default function (userInfo) {
   const { accessToken, spaceId } = userInfo;
 
-    // Step 5: Get Available Apps
-    const appsRes = getAvailableApps(accessToken);
-    if (appsRes.status !== 200) {
-      console.error("Failed to fetch available apps:", appsRes.body);
-      return;
-    }
   // Create first space
-  const spaceRes2 = createSpace(accessToken, 'room', spaceId);
-  const spaceId2 = spaceRes2.json().id; 
-  sleep(5)
-  updateSpace(spaceId2, updateSpacePayload(appsRes), accessToken);
+  const spaceRes2 = createSpace(accessToken, 'room', spaceId); 
   if (spaceRes2.status !== 200) {
     console.error("Failed to create space:", spaceRes2.body);
     return;
   }
 
   // Add delay after creating the first space
-  sleep(10); // Wait for 2 seconds
+  // sleep(3); // Wait for 2 seconds
 
   // Create second space
   const spaceRes3 = createSpace(accessToken, 'room', spaceId);  
@@ -101,12 +92,28 @@ export default function (userInfo) {
     return;
   }
 
+  // Add delay after creating the second space
+  // sleep(10); // Wait for 2 seconds
+
+  // Step 5: Get Available Apps
+  const appsRes = getAvailableApps(accessToken);
+  if (appsRes.status !== 200) {
+    console.error("Failed to fetch available apps:", appsRes.body);
+    return;
+  }
+
+  // Step 6: Update spaces
+  const spaceId2 = spaceRes2.json().id;
   const spaceId3 = spaceRes3.json().id;
 
-  sleep(5)
-  updateSpace(spaceId3, updateSpacePayload(appsRes), accessToken);
+  // Update first space
+  updateSpace(spaceId2, updateSpacePayload(appsRes), accessToken);
 
- 
+  // Add delay after updating the first space
+  // sleep(10); // Wait for 2 seconds
+
+  // Update second space
+  updateSpace(spaceId3, updateSpacePayload(appsRes), accessToken);
 
   sleep(1); // Wait for 1 second before the next iteration
 }
