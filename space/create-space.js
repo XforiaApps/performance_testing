@@ -66,7 +66,6 @@ export function setup() {
   const spaceId = spaceRes.json().id;
 
   updateSpace(spaceId, updateSpacePayload(appsRes), accessToken)
-  console.log(accessToken, spaceId)
   return {
     accessToken,
     spaceId
