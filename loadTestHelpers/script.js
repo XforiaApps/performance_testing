@@ -615,7 +615,6 @@ export function makeAWish(childToken, wishPayload) {
     }
   });
   const responseJson = wishResponse.json();
-  console.log("responseJson", responseJson)
   // Check if the message indicates that the wish request already exists or is expired
   if (responseJson.hasOwnProperty("message")) {
     return null;
@@ -648,7 +647,7 @@ export function grantWish(wishId, grantPayload, accessToken) {
 
   check(res, {
     "Wish Granted - Status 200": (r) => r.status === 200,
-    "Wish Granted - Message Match": (r) => r.json().message === "Wish has been granted",
+    "Wish Granted - Message Match": (r) => r.json().message === "Wish has been rejected",
   });
 
   return res;

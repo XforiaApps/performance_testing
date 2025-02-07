@@ -28,7 +28,7 @@ export const options = {
             executor: "constant-arrival-rate",
             rate: 7000, // ~417 users per second to reach 3,000,000 users in 2 hours
             timeUnit: "1s", // New users arrive every second
-            duration: "1m", // Test duration of 2 hours
+            duration: "5m", // Test duration of 2 hours
             preAllocatedVUs: 3000, // Pre-allocate enough VUs to handle the load
             maxVUs: 5000, // Allow up to 5000 VUs for peak concurrency
         },
@@ -91,9 +91,7 @@ export function setup() {
     };
 }
 
-let isGranted = true
-
-export default function (userInfo) {
+export default async function (userInfo) {
     const { accessToken, childAccessToken } = userInfo;
 
     const wishPayload = {
@@ -102,33 +100,14 @@ export default function (userInfo) {
 
     const wishResponse = makeAWish(childAccessToken, wishPayload);  // Ensure async call
 
-    // make a wish for beacon, landmark, supervision
-
-    // Proceed only if the wish response does not indicate a pre-existing wish
-    // grand wish for landmark, supervision, beacon
-    if (wishResponse) {
-        if (isGranted) {
-            const grantWishPayload = {
-                duration: 10,
-                isGranted,
-                isSupervisor: true,
-            };
-            grantWish(wishResponse.id, grantWishPayload, accessToken);
-            isGranted = false
-        } else {
-            const grantWishPayload = {
-                duration: 10,
-                isGranted,
-                isSupervisor: true,
-            };
-            grantWish(wishResponse.id, grantWishPayload, accessToken);
-            isGranted = true
-        }
-
-
+    if (wishResponse && wishResponse.id) {
+        const grantWishPayload = {
+            duration: 1,
+            isGranted: false,
+            isSupervisor: true,
+        };
+        grantWish(wishResponse.id, grantWishPayload, accessToken);
     }
-
-
 
     sleep(1);
 }
