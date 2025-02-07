@@ -15,7 +15,7 @@ export function requestOTP(payload) {
     JSON.stringify(payload),
     { headers: { "Content-Type": "application/json" } }
   );
-  
+
   check(res, {
     "Valid Email: OTP request successful (200)": (r) => r.status === 200,
     "Valid Email: Response contains success message": (r) =>
@@ -82,7 +82,7 @@ export function updateUser(accessToken, userId) {
     );
     return null; // Return null or handle the error as needed
   }
-  
+
   check(res, {
     "User Update: Response contains updated user data": (r) => {
       const updatedUser = r.json();
@@ -114,9 +114,9 @@ export function inviteSupervisor(accessToken, payload) {
   check(res, {
     "Supervisor Invitation: Contain status 200": (r) => res.status === 200,
     "Supervisor Invitation: Contains message and deeplink": (r) => {
-      const message = res.message 
-      const deepLink = res.deepLink 
-      return {message, deepLink}
+      const message = res.message
+      const deepLink = res.deepLink
+      return { message, deepLink }
     },
   });
 
@@ -141,9 +141,9 @@ export function verifySupervisorEmail(payload) {
   return res
 }
 
-export function createSpace(accessToken, spaceType='landmark', spaceId = '') {
+export function createSpace(accessToken, spaceType = 'landmark', spaceId = '') {
   let spacePayload = {}
-  if(spaceType === 'room') {
+  if (spaceType === 'room') {
     const beacon = generateRandomBeacon();
     spacePayload = {
       name: generateRandomAlphabeticName(6),
@@ -151,13 +151,13 @@ export function createSpace(accessToken, spaceType='landmark', spaceId = '') {
       beacon,
       type: "room",
     };
-  }else {
+  } else {
     spacePayload = {
       name: generateRandomAlphabeticName(6),
       type: "landmark",
       gps,
     };
-  } 
+  }
   const res = http.post(
     `${BASE_URL}/spaces`,
     JSON.stringify(spacePayload),
@@ -440,44 +440,44 @@ export function getWishHistory(userDetails, params) {
       const wishes = r.json();
       return wishes.every((wish) => {
         return (
-           // Non-optional required fields
-        !!wish.id,
-        !!wish.wishId,
-        !!wish.appId,
-        !!wish.userId,
-        !!wish.appName,
-        !!wish.circleId,
-        !!wish.status,
-        !!wish.createdAt,
-        !!wish.updatedAt,
-        typeof wish.isGranted === 'boolean',
+          // Non-optional required fields
+          !!wish.id,
+          !!wish.wishId,
+          !!wish.appId,
+          !!wish.userId,
+          !!wish.appName,
+          !!wish.circleId,
+          !!wish.status,
+          !!wish.createdAt,
+          !!wish.updatedAt,
+          typeof wish.isGranted === 'boolean',
 
-        // Optional fields - different validation approach
-        wish.deviceInfo === undefined || (
-          wish.deviceInfo.deviceId !== undefined &&
-          wish.deviceInfo.deviceName !== undefined &&
-          wish.deviceInfo.os !== undefined &&
-          wish.deviceInfo.osVersion !== undefined &&
-          wish.deviceInfo.model !== undefined
-        ),
+          // Optional fields - different validation approach
+          wish.deviceInfo === undefined || (
+            wish.deviceInfo.deviceId !== undefined &&
+            wish.deviceInfo.deviceName !== undefined &&
+            wish.deviceInfo.os !== undefined &&
+            wish.deviceInfo.osVersion !== undefined &&
+            wish.deviceInfo.model !== undefined
+          ),
 
-        wish.studentId === undefined || wish.studentId !== null,
-        
-        wish.spaces === undefined || 
-        wish.spaces === null || 
-        (Array.isArray(wish.spaces) && 
-          (wish.spaces.length === 0 || 
-            wish.spaces.every(space => 
-              typeof space === 'string' || 
-              (typeof space === 'object' && 
-                space.id !== undefined && 
-                space.name !== undefined)
+          wish.studentId === undefined || wish.studentId !== null,
+
+          wish.spaces === undefined ||
+          wish.spaces === null ||
+          (Array.isArray(wish.spaces) &&
+            (wish.spaces.length === 0 ||
+              wish.spaces.every(space =>
+                typeof space === 'string' ||
+                (typeof space === 'object' &&
+                  space.id !== undefined &&
+                  space.name !== undefined)
+              )
             )
-          )
-        ),
+          ),
 
-        (wish.duration === null || typeof wish.duration === 'number'),
-        (!wish.expiredAt || typeof wish.expiredAt === 'string')
+          (wish.duration === null || typeof wish.duration === 'number'),
+          (!wish.expiredAt || typeof wish.expiredAt === 'string')
         );
       });
     },
@@ -498,7 +498,7 @@ export function getCirlceHistory(userDetails, params) {
       },
     }
   );
-  
+
   check(circleHistory, {
     'Get all space history: response status 200 (OK)': (r) => r.status === 200,
     'Get all space history response': (r) => {
@@ -653,6 +653,66 @@ export function grantWish(wishId, grantPayload, accessToken) {
   return res;
 }
 
+export function getWishes(accessToken) {
+  const res = http.get(`${BASE_URL}/get-wishes`,
+    {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+    });
+    
+    check(res, {
+      "Status is 200": (r) => r.status === 200
+    });
+  
+    let json = res.json();
+    check(json, {
+      "Response is an array": (data) => Array.isArray(data),
+      "Response is not empty": (data) => data.length > 0,
+    });
+  
+    if (Array.isArray(json)) {
+      for (const item of json) {
+        check(item, {
+          "Item has required fields": (obj) =>
+            obj.hasOwnProperty("id") &&
+            obj.hasOwnProperty("appId") &&
+            obj.hasOwnProperty("appName") &&
+            obj.hasOwnProperty("iosBundleId") &&
+            obj.hasOwnProperty("androidPackageName") &&
+            obj.hasOwnProperty("domainName") &&
+            obj.hasOwnProperty("userId") &&
+            obj.hasOwnProperty("userName") &&
+            obj.hasOwnProperty("circleId") &&
+            obj.hasOwnProperty("isGranted") &&
+            obj.hasOwnProperty("isSupervisor") &&
+            obj.hasOwnProperty("status") &&
+            obj.hasOwnProperty("createdAt") &&
+            obj.hasOwnProperty("updatedAt"),
+  
+          "Spaces field is optional but must be an array if present": (obj) =>
+            !obj.hasOwnProperty("spaces") || Array.isArray(obj.spaces),
+  
+          "DeviceInfo is optional but must have required fields if present": (obj) =>
+            !obj.hasOwnProperty("deviceInfo") ||
+            (obj.deviceInfo &&
+              obj.deviceInfo.hasOwnProperty("deviceId") &&
+              obj.deviceInfo.hasOwnProperty("model") &&
+              obj.deviceInfo.hasOwnProperty("osVersion") &&
+              obj.deviceInfo.hasOwnProperty("deviceName") &&
+              obj.deviceInfo.hasOwnProperty("os")),
+  
+          "Duration is optional but must be a number if present": (obj) =>
+            !obj.hasOwnProperty("duration") || typeof obj.duration === "number",
+  
+          "ExpiredAt is optional but must be a valid date string if present": (obj) =>
+            !obj.hasOwnProperty("expiredAt") ||
+            (typeof obj.expiredAt === "string" && !isNaN(Date.parse(obj.expiredAt))),
+        });
+      }
+    }
+  }
 
 
 // export function setupUser(userCounts) {
