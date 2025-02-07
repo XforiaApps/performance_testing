@@ -667,7 +667,6 @@ export function getWishes(accessToken) {
     });
   
     let json = res.json();
-    console.log("Json response", json)
     check(json, {
       "Response is an array": (data) => Array.isArray(data),
       "Response is not empty": (data) => data.length > 0,
