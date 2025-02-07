@@ -89,7 +89,7 @@ export function setup() {
     const userVerifyResponse1 = verifyUser(userVerifyPayload1, accessToken);
     const childAccessToken1 = userVerifyResponse1.tokens.accessToken;
     makeAWish(childAccessToken1, wishPayload)
-
+  
     const userVerifyPayload2 = createUserVerifyPayload(token);
     const userVerifyResponse2 = verifyUser(userVerifyPayload2, accessToken);
     const childAccessToken2 = userVerifyResponse2.tokens.accessToken;
@@ -99,18 +99,17 @@ export function setup() {
     const userVerifyResponse3 = verifyUser(userVerifyPayload3, accessToken);
     const childAccessToken3 = userVerifyResponse3.tokens.accessToken;
     makeAWish(childAccessToken3, wishPayload)
-
+    
     const userVerifyPayload4 = createUserVerifyPayload(token);
     const userVerifyResponse4 = verifyUser(userVerifyPayload4, accessToken);
     const childAccessToken4 = userVerifyResponse4.tokens.accessToken;
     makeAWish(childAccessToken4, wishPayload)
-
-
+    
     const userVerifyPayload5 = createUserVerifyPayload(token);
     const userVerifyResponse5 = verifyUser(userVerifyPayload5, accessToken);
     const childAccessToken5 = userVerifyResponse5.tokens.accessToken;
     makeAWish(childAccessToken5, wishPayload)
-
+  
 
     return {
         accessToken,
