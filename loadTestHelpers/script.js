@@ -132,10 +132,28 @@ export function verifySupervisorEmail(payload) {
       },
     }
   );
-
   check(res, {
     "Supervisor Verify: Contain status 200": (r) => r.status === 200,
     "Supervisor Verify: Contains message": (r) => r.json().message === 'Email verified successfully'
+  });
+
+  return res
+}
+
+export function locationTracking(accessToken) {
+  const res = http.get(
+    `${BASE_URL}/livemode/activate`,
+    {
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+  check(res, {
+    'is status 200': (r) => r.status === 200,
+    'has message field': (r) => JSON.parse(r.body).hasOwnProperty('message'),
+    'message is string': (r) => typeof JSON.parse(r.body).message === 'string',
   });
 
   return res
@@ -266,6 +284,7 @@ export function updateSpace(spaceId, updateSpacePayload, accessToken) {
       },
     }
   );
+
 
   check(res, {
     "Space Update: Apps added successfully (200)": (r) => r.status === 200,

@@ -10,6 +10,7 @@ import {
     verifyUser,
     inviteSupervisor,
     verifySupervisorEmail,
+    locationTracking,
 } from "../loadTestHelpers/script.js";
 import { generateRandomEmail, generateDeviceDetails, generateRandomAlphabeticName, updateSpacePayload, } from "../utils/utils.js";
 
@@ -53,18 +54,12 @@ export function setup() {
     updateUser(accessToken, userId);
 
     const space1 = createSpace(accessToken, 'landmark');
-    const space2 = createSpace(accessToken, 'room', space1.json().id);
-    const space3 = createSpace(accessToken, 'room', space1.json().id)
 
     const appsRes = getAvailableApps(accessToken);
-
+    
     const spaceId1 = space1.json().id;
-    const spaceId2 = space2.json().id;
-    const spaceId3 = space3.json().id
 
     updateSpace(spaceId1, updateSpacePayload(appsRes), accessToken);
-    updateSpace(spaceId2, updateSpacePayload(appsRes), accessToken);
-    updateSpace(spaceId3, updateSpacePayload(appsRes), accessToken);
 
     const qrRes = requestQRCode(accessToken);
 
@@ -79,48 +74,11 @@ export function setup() {
         device: childDeviceDetails,
     };
     verifyUser(payload)
-    const circleId = verifyRes.json().user.circleId
 
-    return { accessToken, circleId }
+    return { accessToken }
 }
 
 export default function (userDetails) {
-    const { accessToken, circleId } = userDetails;
-
-    const supervisorName = generateRandomEmail();
-    let payload = {
-        email: generateRandomEmail(),
-        name: supervisorName
-    };
-
-    const supervisorRes = inviteSupervisor(accessToken, payload);
-
-    if (!supervisorRes || !supervisorRes.json) {
-        console.error("Error: inviteSupervisor response is invalid");
-        return;
-    }
-
-    const supervisorData = supervisorRes.json();
-    const deepLinkSupervisor = supervisorData.deepLink;
-
-    if (!deepLinkSupervisor) {
-        console.error("Error: deepLinkSupervisor is missing in response");
-        return;
-    }
-    
-    const tokenSupervisor = deepLinkSupervisor.match(/token=([^&]+)/)?.[1];
-    const hashedName = deepLinkSupervisor.match(/nameHash=([^&]+)/)?.[1];
-
-    if (!tokenSupervisor || !hashedName) {
-        console.error("Error: Missing token or hashed name from deepLinkSupervisor");
-        return;
-    }
-
-    payload = {
-        circleId,
-        token: tokenSupervisor,
-        name: hashedName
-    };
-
-    verifySupervisorEmail(payload);
+    const { accessToken } = userDetails;
+    locationTracking(accessToken)
 }
