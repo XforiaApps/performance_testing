@@ -99,7 +99,6 @@ export default async function (userInfo) {
     };
 
     const wishResponse = makeAWish(childAccessToken, wishPayload);  // Ensure async call
-
     if (wishResponse && wishResponse.id) {
         const grantWishPayload = {
             duration: 1,
