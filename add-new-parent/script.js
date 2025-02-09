@@ -101,6 +101,7 @@ export default function (userDetails) {
     }
 
     const supervisorData = supervisorRes.json();
+    console.log(supervisorData)
     const deepLinkSupervisor = supervisorData.deepLink;
     if (!deepLinkSupervisor) {
         console.error("Error: deepLinkSupervisor is missing in response");
