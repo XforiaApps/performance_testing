@@ -25,7 +25,7 @@ export const options = {
             executor: "constant-arrival-rate",
             rate: 7000, // ~417 users per second to reach 3,000,000 users in 2 hours
             timeUnit: "1s", // New users arrive every second
-            duration: "5m", // Test duration of 2 hours
+            duration: "1m", // Test duration of 2 hours
             preAllocatedVUs: 3000, // Pre-allocate enough VUs to handle the load
             maxVUs: 5000, // Allow up to 5000 VUs for peak concurrency
         },
@@ -86,7 +86,14 @@ export function setup() {
 }
 
 export default function (userInfo) {
-    const { accessToken, childToken } = userInfo
+    const { accessToken } = userInfo
+    const qrCodeRes = requestQRCode(accessToken);
+    const deepLink = qrCodeRes.json().deepLink;
+    const token = deepLink.match(/token=([^&]+)/)?.[1];
+    const userVerifyPayload = createUserVerifyPayload(token);
+    const userVerifyResponse = verifyUser(userVerifyPayload, accessToken);
+    const childToken = userVerifyResponse.tokens.accessToken;
+
     const wishResponse = makeAWish(childToken, {
         appId: 1,
     });
@@ -95,21 +102,19 @@ export default function (userInfo) {
         return   // console.log(`Failed to create wish for VU ${__VU}`);
     }
 
-    // Small delay before granting wish
-    // sleep(3);
-
     // Grant wish
-    // const grantResponse = grantWish(
-    //     wishResponse.id,
-    //     {
-    //         duration: 1,
-    //         isGranted: true,
-    //         isSupervisor: true
-    //     },
-    //     accessToken
-    // );
-    // if (!grantResponse) {
-    //     console.error(`Failed to grant wish for VU ${__VU}`);
-    // }
+    const grantResponse = grantWish(
+        wishResponse.id,
+        {
+            duration: 1,
+            isGranted: true,
+            isSupervisor: true
+        },
+        accessToken
+    );
+    console.log(grantResponse)
+    if (!grantResponse) {
+        console.error(`Failed to grant wish for VU ${__VU}`);
+    }
     sleep(1)
 }

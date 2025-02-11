@@ -652,6 +652,7 @@ export function makeAWish(childToken, wishPayload) {
 }
 
 export function grantWish(wishId, grantPayload, accessToken) {
+
   const res = http.post(`${BASE_URL}/grant-wish/${wishId}`,
     JSON.stringify(grantPayload),
     {
