@@ -203,7 +203,6 @@ export function createSpace(accessToken, spaceType = 'landmark', spaceId = '') {
     return null; // Return null or handle the error as needed
   }
 
-  console.log("Space Info", jsonResponse)
   // Validate response content
   check(res, {
     "Space Create: Contains space ID": (r) => jsonResponse.id !== undefined,
