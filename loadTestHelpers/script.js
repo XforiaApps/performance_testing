@@ -26,6 +26,7 @@ export function requestOTP(payload) {
 }
 
 export function verifyOTP(payload) {
+ 
   const res = http.post(
     `${BASE_URL}/auth/email/verify-otp`,
     JSON.stringify({
@@ -33,6 +34,7 @@ export function verifyOTP(payload) {
     }),
     { headers: { "Content-Type": "application/json" } }
   );
+
 
   check(res, {
     "Verify OTP: OTP verification successful (200)": (r) => r.status === 200,
@@ -201,6 +203,7 @@ export function createSpace(accessToken, spaceType = 'landmark', spaceId = '') {
     return null; // Return null or handle the error as needed
   }
 
+  console.log("Space Info", jsonResponse)
   // Validate response content
   check(res, {
     "Space Create: Contains space ID": (r) => jsonResponse.id !== undefined,
