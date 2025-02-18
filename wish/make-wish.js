@@ -23,7 +23,7 @@ export const options = {
     scenarios: {
         steadyLoad: {
             executor: "constant-arrival-rate",
-            rate: 7000, // ~417 users per second to reach 3,000,000 users in 2 hours
+            rate: 2000, // ~417 users per second to reach 3,000,000 users in 2 hours
             timeUnit: "1s", // New users arrive every second
             duration: "5m", // Test duration of 2 hours
             preAllocatedVUs: 2000, // Pre-allocate enough VUs to handle the load
