@@ -88,8 +88,6 @@ export function setup() {
     const deepLink = qrCodeRes.json().deepLink;
     const token = deepLink.match(/token=([^&]+)/)?.[1];
 
-    // Step 8: Check existing child
-    let childId = checkIfChildAlreadyExists(token, accessToken);
 
     // Step 9: Create child device details if not exists
     childDeviceDetails = generateDeviceDetails();
