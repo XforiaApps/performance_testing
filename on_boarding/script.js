@@ -14,23 +14,39 @@ import { generateRandomEmail, generateDeviceDetails, generateRandomAlphabeticNam
 let childDeviceDetails = false
 
 export const options = {
-  setupTimeout: '10m', // Allow setup to run for up to 10 minutes
   scenarios: {
-      steadyLoad: {
-          executor: "constant-arrival-rate",
-          rate: 7000, // ~417 users per second to reach 3,000,000 users in 2 hours
-          timeUnit: "1s", // New users arrive every second
-          duration: "5m", // Test duration of 2 hours
-          preAllocatedVUs: 1000, // Pre-allocate enough VUs to handle the load
-          maxVUs: 5000, // Allow up to 5000 VUs for peak concurrency
-      },
+    rampUpTo60k: {
+      executor: 'ramping-vus',
+      startVUs: 0, // Start with 0 virtual users
+      stages: [
+        { duration: '5m', target: 50000 }, // Ramp up to 10k VUs in 2 minutes
+        { duration: '5m', target: 50000 }, // Ramp up to 20k VUs in 2 minutes
+      ],
+    },
   },
-  ext: {
-      loadimpact: {
-          name: "5000 request per second",
-      },
+  tags: {
+    name: "load_test",  // Use a static name instead of dynamic high-cardinality values
   },
 };
+
+// export const options = {
+//   setupTimeout: '10m', // Allow setup to run for up to 10 minutes
+//   scenarios: {
+//       steadyLoad: {
+//           executor: "constant-arrival-rate",
+//           rate: 7000, // ~417 users per second to reach 3,000,000 users in 2 hours
+//           timeUnit: "1s", // New users arrive every second
+//           duration: "5m", // Test duration of 2 hours
+//           preAllocatedVUs: 1000, // Pre-allocate enough VUs to handle the load
+//           maxVUs: 5000, // Allow up to 5000 VUs for peak concurrency
+//       },
+//   },
+//   ext: {
+//       loadimpact: {
+//           name: "5000 request per second",
+//       },
+//   },
+// };
 
 
 export default function() {
